@@ -145,7 +145,7 @@ double Sphere::intersect(Ray& ray) {
 	double b = 2.0 * glm::dot(direction, origin);
 	double c = glm::dot(origin,origin) - 1.0;
 	double det = b*b - 4.0*c;
-	if (det<0.0) return -1.0;
+	if (det<EPSILON) return -1.0;
 	det = sqrt(det);
 	
 	double t1 = (-b+det)/2.0;

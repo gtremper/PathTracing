@@ -4,6 +4,7 @@ camera 0 0 0 0 0 -1 0 1 0 45
 output scene5.png
 
 maxdepth 5
+antialias 4
 
 point 0 20 -40 1 1 1
 directional 0.5 0.5 -0.5 0 0.3 0
