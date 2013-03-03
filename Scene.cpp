@@ -62,7 +62,7 @@ Ray Scene::castEyeRay(double i, double j){
 	double beta = (2.0*j-height)/height;
 	beta *= tan(fovy/2.0);
 	
-	Ray ray(eye,glm::normalize(alpha*u + beta*v - w));
+	Ray ray(eye, alpha*u + beta*v - w);
 	return ray;
 }
 

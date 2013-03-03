@@ -12,7 +12,7 @@ using namespace std;
 /***  RAY  ***/
 Ray::Ray(const vec3& o,const vec3& d){
 	origin = o;
-	direction = d;
+	direction = glm::normalize(d);
 }
 
 vec3 Ray::getPoint(double t) {
