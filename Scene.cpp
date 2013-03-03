@@ -36,12 +36,14 @@ Scene::Scene(char* file) {
 	constant = 1;
 	linear = 0;
 	quadratic = 0;
-	sceneAABB = AABB(DBL_MAX,DBL_MIN,DBL_MAX,DBL_MIN,DBL_MAX,DBL_MIN);
+	vec3 maxvec = vec3(DBL_MAX,DBL_MAX,DBL_MAX);
+	vec3 minvec = vec3(DBL_MIN,DBL_MIN,DBL_MIN);
+	sceneAABB = AABB(maxvec, minvec);
 	parse(file);
 	clog << "Constructing KDTree... ";
-	double diffx = sceneAABB.bounds[1] - sceneAABB.bounds[0];
-	double diffy = sceneAABB.bounds[3] - sceneAABB.bounds[2];
-	double diffz = sceneAABB.bounds[5] - sceneAABB.bounds[4];
+	double diffx = sceneAABB.max[0] - sceneAABB.min[0];
+	double diffy = sceneAABB.max[1] - sceneAABB.min[1];
+	double diffz = sceneAABB.max[2] - sceneAABB.min[2];
 	if (diffx>diffy && diffx>diffz){
 		KDTree = new TreeNode(objects,0,sceneAABB,false);
 	} else if (diffy>diffz){
@@ -84,12 +86,12 @@ void Scene::setCoordinateFrame(vec3& lookat, vec3& up){
 }
 
 void Scene::updateAABB(vec3& point){
-	sceneAABB.bounds[0] = min(sceneAABB.bounds[0],point[0]);
-	sceneAABB.bounds[1] = max(sceneAABB.bounds[1],point[0]);
-	sceneAABB.bounds[2] = min(sceneAABB.bounds[2],point[1]);
-	sceneAABB.bounds[3] = max(sceneAABB.bounds[3],point[1]);
-	sceneAABB.bounds[4] = min(sceneAABB.bounds[4],point[2]);
-	sceneAABB.bounds[5] = max(sceneAABB.bounds[5],point[2]);
+	sceneAABB.min[0] = min(sceneAABB.min[0],point[0]);
+	sceneAABB.max[0] = max(sceneAABB.max[0],point[0]);
+	sceneAABB.min[1] = min(sceneAABB.min[1],point[1]);
+	sceneAABB.max[1] = max(sceneAABB.max[1],point[1]);
+	sceneAABB.min[2] = min(sceneAABB.min[2],point[2]);
+	sceneAABB.max[2] = max(sceneAABB.max[2],point[2]);
 }
 
 void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts, 
@@ -131,12 +133,12 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		trans *= Transform::translate(arg1,arg2,arg3);
 		trans *= Transform::scale(arg4,arg4,arg4);
 		Sphere* s = new Sphere(trans);
-		sceneAABB.bounds[0] = min(s->aabb.bounds[0],sceneAABB.bounds[0]);
-		sceneAABB.bounds[1] = max(s->aabb.bounds[1],sceneAABB.bounds[1]);
-		sceneAABB.bounds[2] = min(s->aabb.bounds[2],sceneAABB.bounds[2]);
-		sceneAABB.bounds[3] = max(s->aabb.bounds[3],sceneAABB.bounds[3]);
-		sceneAABB.bounds[4] = min(s->aabb.bounds[4],sceneAABB.bounds[4]);
-		sceneAABB.bounds[5] = max(s->aabb.bounds[5],sceneAABB.bounds[5]);
+		sceneAABB.min[0] = min(s->aabb.min[0],sceneAABB.min[0]);
+		sceneAABB.max[0] = max(s->aabb.max[0],sceneAABB.max[0]);
+		sceneAABB.min[1] = min(s->aabb.min[1],sceneAABB.min[1]);
+		sceneAABB.max[1] = max(s->aabb.max[1],sceneAABB.max[1]);
+		sceneAABB.min[2] = min(s->aabb.min[2],sceneAABB.min[2]);
+		sceneAABB.max[2] = max(s->aabb.max[2],sceneAABB.max[2]);
 		s->ambient = ambient;
 		s->diffuse = diffuse;
 		s->specular = specular;

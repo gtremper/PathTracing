@@ -46,7 +46,9 @@ Triangle::Triangle(vec3 point0, vec3 point1, vec3 point2) {
 	double maxy = max(max(p0[1],p1[1]),p2[1]);
 	double minz = min(min(p0[2],p1[2]),p2[2]);
 	double maxz = max(max(p0[2],p1[2]),p2[2]);
-	aabb = AABB(minx,maxx,miny,maxy,minz,maxz);
+	vec3 minvec = vec3(minx,miny,minz);
+	vec3 maxvec = vec3(maxx,maxy,maxz);
+	aabb = AABB(minvec, maxvec);
 }
 
 
@@ -128,7 +130,10 @@ Sphere::Sphere(mat4 trans){
 	double maxy = (R[1][3]-sqrt(R[1][3]*R[1][3] -R[3][3]*R[1][1]))/R[3][3];
 	double minz = (R[2][3]+sqrt(R[2][3]*R[2][3] -R[3][3]*R[2][2]))/R[3][3];
 	double maxz = (R[2][3]-sqrt(R[2][3]*R[2][3] -R[3][3]*R[2][2]))/R[3][3];
-	aabb = AABB(minx,maxx,miny,maxy,minz,maxz);
+	
+	vec3 minvec = vec3(minx,miny,minz);
+	vec3 maxvec = vec3(maxx,maxy,maxz);
+	aabb = AABB(minvec, maxvec);
 }
 
 
@@ -162,22 +167,17 @@ vec3 Sphere::getNormal(vec3& hit){
 }
 
 /***  AABB  ***/
-AABB::AABB(double minx, double maxx, double miny, double maxy, double minz, double maxz) {
-	bounds[0] = minx;
-	bounds[1] = maxx;
-	bounds[2] = miny;
-	bounds[3] = maxy;
-	bounds[4] = minz;
-	bounds[5] = maxz;
-	center[0] = (minx + maxx)/2.0;
-	center[1] = (miny + maxy)/2.0;
-	center[2] = (minz + maxz)/2.0;
+AABB::AABB(vec3& minarg, vec3& maxarg) {
+	this->min = minarg;
+	this->max = maxarg;
+	this->center = (minarg+maxarg)/2.0;
+	
 }
 
 bool intersect1D(double start, double dir, double axisMin, double axisMax, double& near, double& far){
 	// Parallel
 	if(dir<EPSILON && dir>-EPSILON){
-		return (!start<axisMin) || (start>axisMax);
+		return (start>axisMin) && (start<axisMax);
 	}
 	
 	//intersection parameters
@@ -198,24 +198,36 @@ bool intersect1D(double start, double dir, double axisMin, double axisMax, doubl
 	return true;
 }
 
+bool
+operator<(const vec3 &vecA, const vec3 &vecB){ 
+	if (vecA[0] > vecB[0]) return false;
+	if (vecA[1] > vecB[1]) return false;
+	if (vecA[2] > vecB[2]) return false;
+	return true;
+}
+
+bool
+operator>(const vec3 &vecA, const vec3 &vecB){ 
+	if (vecA[0] < vecB[0]) return false;
+	if (vecA[1] < vecB[1]) return false;
+	if (vecA[2] < vecB[2]) return false;
+	return true;
+}
+
 double AABB::intersect(Ray& ray, int axis){
-	if (ray.origin[0]>bounds[0] && ray.origin[0]<bounds[1] && ray.origin[1]>bounds[2] &&
-	ray.origin[1]<bounds[3] &&ray.origin[2]>bounds[4] &&ray.origin[2]<bounds[5]){
-		return -1.0; // always first if inside	
+	
+	if (ray.origin < max && ray.origin > min){
+		return EPSILON; // always first if inside	
 	}
 	
 	double far = DBL_MAX;
 	double near = DBL_MIN;
 	
-	if (!intersect1D(ray.origin[0],ray.direction[0],bounds[0],bounds[1],near,far)) return false;
-	if (!intersect1D(ray.origin[1],ray.direction[1],bounds[2],bounds[3],near,far)) return false;
-	if (!intersect1D(ray.origin[2],ray.direction[2],bounds[4],bounds[5],near,far)) return false;
+	if (!intersect1D(ray.origin[0],ray.direction[0],min[0],max[0],near,far)) return false;
+	if (!intersect1D(ray.origin[1],ray.direction[1],min[1],max[1],near,far)) return false;
+	if (!intersect1D(ray.origin[2],ray.direction[2],min[2],max[2],near,far)) return false;
 	
-
-
-	return near;
-	
-	//return true;
+	return near+EPSILON;
 }
 
 

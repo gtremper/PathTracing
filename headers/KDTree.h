@@ -13,7 +13,6 @@ public:
 	std::vector<Shape*> primatives;
 	AABB aabb;
 	int axis;
-	double split;
 };
 
 #endif

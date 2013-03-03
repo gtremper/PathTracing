@@ -8,8 +8,9 @@
 class AABB {
 public:
 	AABB(){};
-	AABB(double,double,double,double,double,double);
-	double bounds[6];
+	AABB(vec3&,vec3&);
+	vec3 max;
+	vec3 min;
 	double intersect(Ray&,int);
 	vec3 center;
 };
