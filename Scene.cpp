@@ -41,16 +41,7 @@ Scene::Scene(char* file) {
 	sceneAABB = AABB(maxvec, minvec);
 	parse(file);
 	clog << "Constructing KDTree... ";
-	double diffx = sceneAABB.max[0] - sceneAABB.min[0];
-	double diffy = sceneAABB.max[1] - sceneAABB.min[1];
-	double diffz = sceneAABB.max[2] - sceneAABB.min[2];
-	if (diffx>diffy && diffx>diffz){
-		KDTree = new TreeNode(objects,0,sceneAABB,false);
-	} else if (diffy>diffz){
-		KDTree = new TreeNode(objects,1,sceneAABB,false);
-	} else {
-		KDTree = new TreeNode(objects,2,sceneAABB,false);
-	}
+	KDTree = new TreeNode(objects,sceneAABB,false);
 	clog << "done"<<endl;
 }
 

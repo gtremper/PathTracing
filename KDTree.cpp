@@ -21,9 +21,17 @@ struct ShapeSorter {
 	int axis;
 };
 
-TreeNode::TreeNode(vector<Shape*>& prims, int ax, AABB& bigBox, bool prevSize){
+TreeNode::TreeNode(vector<Shape*>& prims, AABB& bigBox, bool prevSize){
 	this->aabb = bigBox;
-	this->axis = ax;
+	
+	vec3 diff = bigBox.max - bigBox.min;
+	if (diff[0]>diff[1] && diff[0]>diff[1]){
+		this->axis = 0;
+	} else if (diff[1]>diff[2]){
+		this->axis = 1;
+	} else {
+		this->axis = 2;
+	}
 	
 	ShapeSorter s(axis);
 	sort(prims.begin(), prims.end(),s);
@@ -48,13 +56,16 @@ TreeNode::TreeNode(vector<Shape*>& prims, int ax, AABB& bigBox, bool prevSize){
 	
 	bool same = leftPrims.size()==prims.size() || rightPrims.size()==prims.size();
 	
-	//cout <<prims.size() << " "<< leftPrims.size() << " " << rightPrims.size() <<endl;
+	cout <<prims.size() << " "<< leftPrims.size() << " " << rightPrims.size() <<endl;
 	
-	if( prevSize&&same || prims.size()<=TREELIMIT){
+	int threshold = (prims.size()/5) * 9;
+	int leftSize = leftPrims.size();
+	int rightSize = rightPrims.size();
+	
+	if( leftSize + rightSize > threshold || prims.size()<=TREELIMIT){
 		left = NULL;
 		right = NULL;
 		primatives = prims;
-		//cout << "Leaf" << endl;
 	}else{
 		AABB leftAABB = AABB(aabb);
 		leftAABB.max[axis] = split;
@@ -62,9 +73,8 @@ TreeNode::TreeNode(vector<Shape*>& prims, int ax, AABB& bigBox, bool prevSize){
 		AABB rightAABB = AABB(aabb);
 		rightAABB.min[axis] = split;
 		
-		int newAxis = (axis+1)%3;
-		left = new TreeNode(leftPrims, newAxis, leftAABB, same);
-		right = new TreeNode(rightPrims, newAxis, rightAABB, same);
+		left = new TreeNode(leftPrims, leftAABB, same);
+		right = new TreeNode(rightPrims, rightAABB, same);
 	}
 	
 }
