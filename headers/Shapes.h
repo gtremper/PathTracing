@@ -9,9 +9,9 @@ class AABB {
 public:
 	AABB(){};
 	AABB(vec3&,vec3&);
-	vec3 max;
-	vec3 min;
-	double intersect(Ray&,int);
+	vec3 aabbmax;
+	vec3 aabbmin;
+	double intersect(Ray&);
 	vec3 center;
 };
 

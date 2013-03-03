@@ -168,12 +168,13 @@ vec3 Sphere::getNormal(vec3& hit){
 
 /***  AABB  ***/
 AABB::AABB(vec3& minarg, vec3& maxarg) {
-	this->min = minarg;
-	this->max = maxarg;
+	this->aabbmin = minarg;
+	this->aabbmax = maxarg;
 	this->center = (minarg+maxarg)/2.0;
 	
 }
 
+inline
 bool intersect1D(double start, double dir, double axisMin, double axisMax, double& near, double& far){
 	// Parallel
 	if(dir<EPSILON && dir>-EPSILON){
@@ -214,18 +215,19 @@ operator>(const vec3 &vecA, const vec3 &vecB){
 	return true;
 }
 
-double AABB::intersect(Ray& ray, int axis){
+double AABB::intersect(Ray& ray){
 	
-	if (ray.origin < max && ray.origin > min){
+	if (ray.origin < aabbmax && ray.origin > aabbmin){
 		return EPSILON; // always first if inside	
 	}
+	
 	
 	double far = DBL_MAX;
 	double near = DBL_MIN;
 	
-	if (!intersect1D(ray.origin[0],ray.direction[0],min[0],max[0],near,far)) return false;
-	if (!intersect1D(ray.origin[1],ray.direction[1],min[1],max[1],near,far)) return false;
-	if (!intersect1D(ray.origin[2],ray.direction[2],min[2],max[2],near,far)) return false;
+	if (!intersect1D(ray.origin[0],ray.direction[0],aabbmin[0],aabbmax[0],near,far)) return false;
+	if (!intersect1D(ray.origin[1],ray.direction[1],aabbmin[1],aabbmax[1],near,far)) return false;
+	if (!intersect1D(ray.origin[2],ray.direction[2],aabbmin[2],aabbmax[2],near,far)) return false;
 	
 	return near+EPSILON;
 }

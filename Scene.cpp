@@ -77,12 +77,12 @@ void Scene::setCoordinateFrame(vec3& lookat, vec3& up){
 }
 
 void Scene::updateAABB(vec3& point){
-	sceneAABB.min[0] = min(sceneAABB.min[0],point[0]);
-	sceneAABB.max[0] = max(sceneAABB.max[0],point[0]);
-	sceneAABB.min[1] = min(sceneAABB.min[1],point[1]);
-	sceneAABB.max[1] = max(sceneAABB.max[1],point[1]);
-	sceneAABB.min[2] = min(sceneAABB.min[2],point[2]);
-	sceneAABB.max[2] = max(sceneAABB.max[2],point[2]);
+	sceneAABB.aabbmin[0] = min(sceneAABB.aabbmin[0],point[0]);
+	sceneAABB.aabbmax[0] = max(sceneAABB.aabbmax[0],point[0]);
+	sceneAABB.aabbmin[1] = min(sceneAABB.aabbmin[1],point[1]);
+	sceneAABB.aabbmax[1] = max(sceneAABB.aabbmax[1],point[1]);
+	sceneAABB.aabbmin[2] = min(sceneAABB.aabbmin[2],point[2]);
+	sceneAABB.aabbmax[2] = max(sceneAABB.aabbmax[2],point[2]);
 }
 
 void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts, 
@@ -124,12 +124,12 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		trans *= Transform::translate(arg1,arg2,arg3);
 		trans *= Transform::scale(arg4,arg4,arg4);
 		Sphere* s = new Sphere(trans);
-		sceneAABB.min[0] = min(s->aabb.min[0],sceneAABB.min[0]);
-		sceneAABB.max[0] = max(s->aabb.max[0],sceneAABB.max[0]);
-		sceneAABB.min[1] = min(s->aabb.min[1],sceneAABB.min[1]);
-		sceneAABB.max[1] = max(s->aabb.max[1],sceneAABB.max[1]);
-		sceneAABB.min[2] = min(s->aabb.min[2],sceneAABB.min[2]);
-		sceneAABB.max[2] = max(s->aabb.max[2],sceneAABB.max[2]);
+		sceneAABB.aabbmin[0] = min(s->aabb.aabbmin[0],sceneAABB.aabbmin[0]);
+		sceneAABB.aabbmax[0] = max(s->aabb.aabbmax[0],sceneAABB.aabbmax[0]);
+		sceneAABB.aabbmin[1] = min(s->aabb.aabbmin[1],sceneAABB.aabbmin[1]);
+		sceneAABB.aabbmax[1] = max(s->aabb.aabbmax[1],sceneAABB.aabbmax[1]);
+		sceneAABB.aabbmin[2] = min(s->aabb.aabbmin[2],sceneAABB.aabbmin[2]);
+		sceneAABB.aabbmax[2] = max(s->aabb.aabbmax[2],sceneAABB.aabbmax[2]);
 		s->ambient = ambient;
 		s->diffuse = diffuse;
 		s->specular = specular;

@@ -24,7 +24,7 @@ struct ShapeSorter {
 TreeNode::TreeNode(vector<Shape*>& prims, AABB& bigBox){
 	this->aabb = bigBox;
 	
-	vec3 diff = bigBox.max - bigBox.min;
+	vec3 diff = bigBox.aabbmax - bigBox.aabbmin;
 	if (diff[0]>diff[1] && diff[0]>diff[1]){
 		this->axis = 0;
 	} else if (diff[1]>diff[2]){
@@ -40,14 +40,14 @@ TreeNode::TreeNode(vector<Shape*>& prims, AABB& bigBox){
 	vector<Shape*> leftPrims;
 	vector<Shape*>::iterator it=prims.begin();
 	for(;it!=prims.end(); ++it){
-		if((*it)->aabb.min[axis]<(split+EPSILON)){
+		if((*it)->aabb.aabbmin[axis]<(split+EPSILON)){
 			leftPrims.push_back(*it);
 		}
 	}
 	
 	vector<Shape*> rightPrims;
 	for(it=prims.begin(); it!=prims.end(); ++it){
-		if((*it)->aabb.max[axis]>(split-EPSILON)){
+		if((*it)->aabb.aabbmax[axis]>(split-EPSILON)){
 			rightPrims.push_back(*it);
 		}
 	}
@@ -63,10 +63,10 @@ TreeNode::TreeNode(vector<Shape*>& prims, AABB& bigBox){
 		primatives = prims;
 	}else{
 		AABB leftAABB = AABB(aabb);
-		leftAABB.max[axis] = split;
+		leftAABB.aabbmax[axis] = split;
 		
 		AABB rightAABB = AABB(aabb);
-		rightAABB.min[axis] = split;
+		rightAABB.aabbmin[axis] = split;
 		
 		left = new TreeNode(leftPrims, leftAABB);
 		right = new TreeNode(rightPrims, rightAABB);
@@ -86,8 +86,8 @@ Intersection TreeNode::intersect(Ray& ray){
 		return Intersection(primatives,ray);
 	}
 	
-	double hitLeft = left->aabb.intersect(ray,this->axis);
-	double hitRight = right->aabb.intersect(ray,this->axis);
+	double hitLeft = left->aabb.intersect(ray);
+	double hitRight = right->aabb.intersect(ray);
 	
 	if(!hitLeft && !hitRight) return Intersection();
 	
