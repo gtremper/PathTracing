@@ -21,7 +21,7 @@ struct ShapeSorter {
 	int axis;
 };
 
-TreeNode::TreeNode(vector<Shape*>& prims, AABB& bigBox, bool prevSize){
+TreeNode::TreeNode(vector<Shape*>& prims, AABB& bigBox){
 	this->aabb = bigBox;
 	
 	vec3 diff = bigBox.max - bigBox.min;
@@ -36,8 +36,6 @@ TreeNode::TreeNode(vector<Shape*>& prims, AABB& bigBox, bool prevSize){
 	ShapeSorter s(axis);
 	sort(prims.begin(), prims.end(),s);
 	double split = prims[prims.size()/2]->aabb.center[axis];
-	double leftSplit = DBL_MIN;
-	double rightSplit = DBL_MAX;
 	
 	vector<Shape*> leftPrims;
 	vector<Shape*>::iterator it=prims.begin();
@@ -54,15 +52,12 @@ TreeNode::TreeNode(vector<Shape*>& prims, AABB& bigBox, bool prevSize){
 		}
 	}
 	
-	bool same = leftPrims.size()==prims.size() || rightPrims.size()==prims.size();
+	unsigned int threshold = (prims.size()/TREELIMIT) * (2*TREELIMIT-1);
+	unsigned int rsize = rightPrims.size();
+	unsigned int lsize = leftPrims.size();
+	bool above_tresh = (lsize + rsize) > threshold;
 	
-	cout <<prims.size() << " "<< leftPrims.size() << " " << rightPrims.size() <<endl;
-	
-	int threshold = (prims.size()/5) * 9;
-	int leftSize = leftPrims.size();
-	int rightSize = rightPrims.size();
-	
-	if( leftSize + rightSize > threshold || prims.size()<=TREELIMIT){
+	if( above_tresh || prims.size()==lsize || prims.size()==rsize || prims.size()<=TREELIMIT){
 		left = NULL;
 		right = NULL;
 		primatives = prims;
@@ -73,8 +68,8 @@ TreeNode::TreeNode(vector<Shape*>& prims, AABB& bigBox, bool prevSize){
 		AABB rightAABB = AABB(aabb);
 		rightAABB.min[axis] = split;
 		
-		left = new TreeNode(leftPrims, leftAABB, same);
-		right = new TreeNode(rightPrims, rightAABB, same);
+		left = new TreeNode(leftPrims, leftAABB);
+		right = new TreeNode(rightPrims, rightAABB);
 	}
 	
 }
@@ -103,21 +98,6 @@ Intersection TreeNode::intersect(Ray& ray){
 		return left->intersect(ray);
 	}
 	
-	//hits both at same spot
-	
-	/*
-	Intersection hit;
-	if (abs(hitLeft-hitRight) < EPSILON){
-		if (ray.direction[this->axis] > 0) {
-			hit = right->intersect(ray);
-			return hit;
-		} else {
-			hit = left->intersect(ray);
-			return hit;
-		}
-	}
-	*/
-	
 	Intersection hit;
 	if (hitLeft > hitRight){
 		hit = right->intersect(ray);
@@ -132,18 +112,5 @@ Intersection TreeNode::intersect(Ray& ray){
 		}
 		return hit;
 	}
-	
-	/*
-	
-	Intersection hit1 = left->intersect(ray);
-	Intersection hit2 = right->intersect(ray);
-	if(!hit1.primative) return hit2;
-	if(!hit2.primative) return hit1;
-	if(glm::distance(hit1.point,ray.origin)<glm::distance(hit2.point,ray.origin)){
-		return hit1;
-	}
-	return hit2;
-	*/
-	
-	
+		
 }

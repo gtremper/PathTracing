@@ -41,7 +41,7 @@ Scene::Scene(char* file) {
 	sceneAABB = AABB(maxvec, minvec);
 	parse(file);
 	clog << "Constructing KDTree... ";
-	KDTree = new TreeNode(objects,sceneAABB,false);
+	KDTree = new TreeNode(objects,sceneAABB);
 	clog << "done"<<endl;
 }
 

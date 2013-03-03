@@ -5,7 +5,7 @@
 
 class TreeNode {
 public:
-	TreeNode(std::vector<Shape*>&, AABB&, bool);
+	TreeNode(std::vector<Shape*>&, AABB&);
 	~TreeNode();
 	Intersection intersect(Ray&);
 	TreeNode* left;
