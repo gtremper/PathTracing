@@ -11,13 +11,13 @@ public:
 	AABB(vec3&,vec3&);
 	vec3 aabbmax;
 	vec3 aabbmin;
-	double intersect(Ray&);
+	float intersect(Ray&);
 	vec3 center;
 };
 
 class Shape {
 	public:
-		virtual double intersect(Ray&)=0;
+		virtual float intersect(Ray&)=0;
 		virtual vec3 getNormal(vec3&)=0;
 	//	virtual vec3 getTexture(vec3&){};
 		
@@ -28,16 +28,16 @@ class Shape {
 		vec3 ambient;
 		vec3 diffuse;
 		vec3 specular;
-		double shininess;
+		float shininess;
 		vec3 emission;
-		double indexofrefraction;
-		double refractivity;
+		float indexofrefraction;
+		float refractivity;
 };
 
 class Sphere : public Shape {
 	public:
 		Sphere(mat4);
-		double intersect(Ray&);
+		float intersect(Ray&);
 		vec3 getNormal(vec3&);
 	
 		mat4 mv;
@@ -48,7 +48,7 @@ class Triangle : public Shape {
 	public:
 		Triangle(){};
 		Triangle(vec3,vec3,vec3);
-		double intersect(Ray&);
+		float intersect(Ray&);
 		virtual vec3 getNormal(vec3&);
 	//	vec3 getTexture(vec3&);
 	

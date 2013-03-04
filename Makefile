@@ -4,7 +4,7 @@
 CC = g++ -g -Wall -O3 -fmessage-length=0
 
 #Libraries
-CCOPTS = -c -I./headers/ -I./glm-0.9.3.2 -fopenmp
+CCOPTS = -c -I./headers/ -I./glm-0.9.3.2 -fopenmp -I./eigen
 LDOPTS = -L./lib/mac -lfreeimage -fopenmp
 
 #Final Files and Intermediate .o Files

@@ -14,23 +14,23 @@
 // glm provides vector, matrix classes like glsl
 // Typedefs to make code more readable 
 
-typedef glm::dmat2 mat2 ;
-typedef glm::dmat3 mat3 ;
-typedef glm::dmat4 mat4 ; 
-typedef glm::dvec2 vec2 ;
-typedef glm::dvec3 vec3 ; 
-typedef glm::dvec4 vec4 ; 
+typedef glm::mat2 mat2 ;
+typedef glm::mat3 mat3 ;
+typedef glm::mat4 mat4 ; 
+typedef glm::vec2 vec2 ;
+typedef glm::vec3 vec3 ; 
+typedef glm::vec4 vec4 ; 
 
-const double pi = 3.14159265358979 ; // For portability across platforms
+const float pi = 3.14159265358979 ; // For portability across platforms
 
 class Transform	 
 {
 public:
 	Transform();
 	virtual ~Transform();
-	static mat4 rotate(double degrees, const vec3& axis) ;
-	static mat4 scale(double sx, double sy, double sz) ; 
-	static mat4 translate(double tx, double ty, double tz);
+	static mat4 rotate(float degrees, const vec3& axis) ;
+	static mat4 scale(float sx, float sy, float sz) ; 
+	static mat4 translate(float tx, float ty, float tz);
 };
 
 #endif

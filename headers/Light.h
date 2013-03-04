@@ -22,14 +22,14 @@ public:
 class PointLight : public Light {
 public:
 	~PointLight(){};
-	PointLight(const vec3& color,const vec3& p, double,double,double);
+	PointLight(const vec3& color,const vec3& p, float,float,float);
 	vec3 shade(const Intersection& hit, TreeNode& tree,const vec3&);	
 	bool isVisible(const vec3& point,  TreeNode& tree);
 	vec3 point;
-	double constant;
-	double linear;
-	double quadratic;
-	double lightradius;
+	float constant;
+	float linear;
+	float quadratic;
+	float lightradius;
 	int shadowrays;
 };
 

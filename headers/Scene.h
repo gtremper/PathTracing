@@ -12,8 +12,8 @@ class Scene {
 		int height;
 		int maxdepth;
 		std::string filename;
-		double fovy;
-		double fovx;
+		float fovy;
+		float fovx;
 		vec3 eye;
 		std::vector<Shape*> objects;
 		AABB sceneAABB;
@@ -22,23 +22,23 @@ class Scene {
 		vec3 ambient;
 		vec3 diffuse;
 		vec3 specular;
-		double shininess;
+		float shininess;
 		vec3 emission;
-		double indexofrefraction;
-		double refractivity;
+		float indexofrefraction;
+		float refractivity;
 		
 		int antialias;
 		int shadowrays;
-		double lightradius;
+		float lightradius;
 		
 		std::vector<Light*> lights;
-		double constant;
-		double linear;
-		double quadratic;
+		float constant;
+		float linear;
+		float quadratic;
 		
 		Scene(char*);
 		~Scene();
-		Ray castEyeRay(double,double);
+		Ray castEyeRay(float,float);
 		void setCoordinateFrame(vec3&,vec3&);
 		void parseLine(std::string,std::stack<mat4>&,
 			std::vector<vec3>&,std::vector<vec3>&,std::vector<vec3>&);
