@@ -1,5 +1,5 @@
 #Thousand Spheres
-size 640 480
+size 840 680
 camera 0 0 0 0 0 -1 0 1 0 45
 output scene5.png
 

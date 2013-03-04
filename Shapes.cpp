@@ -5,7 +5,7 @@
 #include "Shapes.h"
 #include "Intersection.h"
 
-#define EPSILON 0.000001f
+#define EPSILON 0.000001
 
 using namespace std;
 
@@ -15,16 +15,16 @@ Ray::Ray(const vec3& o,const vec3& d){
 	direction = glm::normalize(d);
 }
 
-vec3 Ray::getPoint(float t) {
+vec3 Ray::getPoint(double t) {
 	return origin + t*direction;
 }
 
 /***  INTERSECTION  ***/
 Intersection::Intersection(vector<Shape*>& objects, Ray& ray) {
-	float min_t = DBL_MAX;
+	double min_t = DBL_MAX;
 	primative = NULL;
 	for(vector<Shape*>::iterator prim=objects.begin(); prim!=objects.end(); prim++) {
-		float t = (*prim)->intersect(ray);
+		double t = (*prim)->intersect(ray);
 		if (t>0 && t<min_t){
 			primative = *prim;
 			min_t = t;
@@ -40,33 +40,33 @@ Triangle::Triangle(vec3 point0, vec3 point1, vec3 point2) {
 	p1 = point1;
 	p2 = point2;
 	n0 = glm::normalize(glm::cross(p1-p0,p2-p0));
-	float minx = min(min(p0[0],p1[0]),p2[0]);
-	float maxx = max(max(p0[0],p1[0]),p2[0]);
-	float miny = min(min(p0[1],p1[1]),p2[1]);
-	float maxy = max(max(p0[1],p1[1]),p2[1]);
-	float minz = min(min(p0[2],p1[2]),p2[2]);
-	float maxz = max(max(p0[2],p1[2]),p2[2]);
+	double minx = min(min(p0[0],p1[0]),p2[0]);
+	double maxx = max(max(p0[0],p1[0]),p2[0]);
+	double miny = min(min(p0[1],p1[1]),p2[1]);
+	double maxy = max(max(p0[1],p1[1]),p2[1]);
+	double minz = min(min(p0[2],p1[2]),p2[2]);
+	double maxz = max(max(p0[2],p1[2]),p2[2]);
 	vec3 minvec = vec3(minx,miny,minz);
 	vec3 maxvec = vec3(maxx,maxy,maxz);
 	aabb = AABB(minvec, maxvec);
 }
 
 
-float Triangle::intersect(Ray& ray){
+double Triangle::intersect(Ray& ray){
 	vec3 col1 = p1-p0;
 	vec3 col2 = p2-p0;
 	mat3 M = mat3(col1, col2, -ray.direction);
-	float det = glm::determinant(M);
-	if (det<EPSILON && det>-EPSILON) return -1.0f;
+	double det = glm::determinant(M);
+	if (det<EPSILON && det>-EPSILON) return -1.0;
 	
 	M[0] = ray.origin-p0;
-	float alpha = glm::determinant(M)/det;
-	if (alpha<0.0f || alpha>1.0f) return -1.0f;
+	double alpha = glm::determinant(M)/det;
+	if (alpha<0.0 || alpha>1.0) return -1.0;
 	M[0] = col1;
 	M[1] = ray.origin-p0;
 
-	float beta = glm::determinant(M)/det;
-	if (beta<0.0f || beta+alpha>1.0f) return -1.0f;
+	double beta = glm::determinant(M)/det;
+	if (beta<0.0 || beta+alpha>1.0) return -1.0;
 	M[1] = col2;
 	M[2] = ray.origin-p0;
 	return glm::determinant(M)/det;
@@ -78,15 +78,15 @@ vec3 Triangle::getNormal(vec3& hit){
 /*
 vec3 Triangle::getTexture(vec3& hit){
 	mat2 M = mat2(p1[0]-p0[0], p1[1]-p0[1], p2[0]-p0[0], p2[1]-p0[1]);
-	float det = glm::determinant(M);
+	double det = glm::determinant(M);
 	M[0][0] = hit[0]-p0[0];
 	M[0][1] = hit[1]-p0[1];
-	float alpha = glm::determinant(M)/det;//p0 to p1
+	double alpha = glm::determinant(M)/det;//p0 to p1
 	M[0][0] = p1[0]-p0[0];
 	M[0][1] = p1[1]-p0[1];
 	M[1][0] = hit[0]-p0[0];
 	M[1][1] = hit[1]-p0[1];
-	float beta = glm::determinant(M)/det;//p0 to p2
+	double beta = glm::determinant(M)/det;//p0 to p2
 }
 
 */
@@ -103,15 +103,15 @@ NormTriangle::NormTriangle(vec3 point0, vec3 point1, vec3 point2,
 
 vec3 NormTriangle::getNormal(vec3& hit){
 	mat2 M = mat2(p1[0]-p0[0], p1[1]-p0[1], p2[0]-p0[0], p2[1]-p0[1]);
-	float det = glm::determinant(M);
+	double det = glm::determinant(M);
 	M[0][0] = hit[0]-p0[0];
 	M[0][1] = hit[1]-p0[1];
-	float beta = glm::determinant(M)/det;
+	double beta = glm::determinant(M)/det;
 	M[0][0] = p1[0]-p0[0];
 	M[0][1] = p1[1]-p0[1];
 	M[1][0] = hit[0]-p0[0];
 	M[1][1] = hit[1]-p0[1];
-	float gamma = glm::determinant(M)/det;
+	double gamma = glm::determinant(M)/det;
 	return glm::normalize((1-beta-gamma)*n0 + beta*n1 + gamma*n2);
 }
 
@@ -121,15 +121,15 @@ Sphere::Sphere(mat4 trans){
 	inv = glm::inverse(mv);
 	
 	/*Bounding Box*/
-	mat4 S = mat4(1.0f);
-	S[3][3] = -1.0f;
+	mat4 S = mat4(1.0);
+	S[3][3] = -1.0;
 	mat4 R = mv*S*glm::transpose(mv);
-	float minx = (R[0][3]+sqrt(R[0][3]*R[0][3] -R[3][3]*R[0][0]))/R[3][3];
-	float maxx = (R[0][3]-sqrt(R[0][3]*R[0][3] -R[3][3]*R[0][0]))/R[3][3];
-	float miny = (R[1][3]+sqrt(R[1][3]*R[1][3] -R[3][3]*R[1][1]))/R[3][3];
-	float maxy = (R[1][3]-sqrt(R[1][3]*R[1][3] -R[3][3]*R[1][1]))/R[3][3];
-	float minz = (R[2][3]+sqrt(R[2][3]*R[2][3] -R[3][3]*R[2][2]))/R[3][3];
-	float maxz = (R[2][3]-sqrt(R[2][3]*R[2][3] -R[3][3]*R[2][2]))/R[3][3];
+	double minx = (R[0][3]+sqrt(R[0][3]*R[0][3] -R[3][3]*R[0][0]))/R[3][3];
+	double maxx = (R[0][3]-sqrt(R[0][3]*R[0][3] -R[3][3]*R[0][0]))/R[3][3];
+	double miny = (R[1][3]+sqrt(R[1][3]*R[1][3] -R[3][3]*R[1][1]))/R[3][3];
+	double maxy = (R[1][3]-sqrt(R[1][3]*R[1][3] -R[3][3]*R[1][1]))/R[3][3];
+	double minz = (R[2][3]+sqrt(R[2][3]*R[2][3] -R[3][3]*R[2][2]))/R[3][3];
+	double maxz = (R[2][3]-sqrt(R[2][3]*R[2][3] -R[3][3]*R[2][2]))/R[3][3];
 	
 	vec3 minvec = vec3(minx,miny,minz);
 	vec3 maxvec = vec3(maxx,maxy,maxz);
@@ -138,55 +138,55 @@ Sphere::Sphere(mat4 trans){
 
 
 
-float Sphere::intersect(Ray& ray) {
-	vec3 direction = glm::normalize(vec3(inv * vec4(ray.direction,0.0f)));
-	vec3 origin =vec3(inv * vec4(ray.origin,1.0f));
+double Sphere::intersect(Ray& ray) {
+	vec3 direction = glm::normalize(vec3(inv * vec4(ray.direction,0.0)));
+	vec3 origin =vec3(inv * vec4(ray.origin,1.0));
 	
-	float b = 2.0f * glm::dot(direction, origin);
-	float c = glm::dot(origin,origin) - 1.0f;
-	float det = b*b - 4.0f*c;
-	if (det<EPSILON) return -1.0f;
+	double b = 2.0f * glm::dot(direction, origin);
+	double c = glm::dot(origin,origin) - 1.0;
+	double det = b*b - 4.0f*c;
+	if (det<0.0) return -1.0;
 	det = sqrt(det);
 	
-	float t1 = (-b+det)*0.5f;
-	float t2 = (-b-det)*0.5f;
+	double t1 = (-b+det)*0.5;
+	double t2 = (-b-det)*0.5;
 	
-	if (t1<0.0 && t2<0.0) return -1.0f;
+	if (t1<0.0 && t2<0.0) return -1.0;
 	
 	if (t2>0.0f) {
-		vec4 hit = mv * vec4(origin+t2*direction,1.0f);
+		vec4 hit = mv * vec4(origin+t2*direction,1.0);
 		return glm::distance(ray.origin,vec3(hit));
 	} else { //t1 is closer
-		vec4 hit = mv * vec4(origin+t1*direction,1.0f);
+		vec4 hit = mv * vec4(origin+t1*direction,1.0);
 		return glm::distance(ray.origin,vec3(hit));
 	}
 }
 
 vec3 Sphere::getNormal(vec3& hit){
-	return glm::normalize(vec3(glm::transpose(inv)*inv*vec4(hit,1.0f)));
+	return glm::normalize(vec3(glm::transpose(inv)*inv*vec4(hit,1.0)));
 }
 
 /***  AABB  ***/
 AABB::AABB(vec3& minarg, vec3& maxarg) {
 	this->aabbmin = minarg;
 	this->aabbmax = maxarg;
-	this->center = (minarg+maxarg)/2.0f;
+	this->center = (minarg+maxarg)/2.0;
 	
 }
 
 inline
-bool intersect1D(float start, float dir, float axisMin, float axisMax, float& near, float& far){
+bool intersect1D(double start, double dir, double axisMin, double axisMax, double& near, double& far){
 	// Parallel
 	if(dir<EPSILON && dir>-EPSILON){
 		return (start>axisMin) && (start<axisMax);
 	}
 	
 	//intersection parameters
-	float t0 = (axisMin-start)/dir;
-	float t1 = (axisMax-start)/dir;
+	double t0 = (axisMin-start)/dir;
+	double t1 = (axisMax-start)/dir;
 	
 	if(t0>t1){
-		float temp = t1;
+		double temp = t1;
 		t1 = t0;
 		t0 = temp;
 	}
@@ -194,7 +194,7 @@ bool intersect1D(float start, float dir, float axisMin, float axisMax, float& ne
 	near = max(t0,near);
 	far = min(t1,far);
 	
-	if(near>far || far<0.0f) return false;
+	if(near>far || far<0.0) return false;
 	
 	return true;
 }
@@ -215,15 +215,15 @@ operator>(const vec3 &vecA, const vec3 &vecB){
 	return true;
 }
 
-float AABB::intersect(Ray& ray){
+double AABB::intersect(Ray& ray){
 	
 	if (ray.origin < aabbmax && ray.origin > aabbmin){
 		return EPSILON; // always first if inside	
 	}
 	
 	
-	float far = FLT_MAX;
-	float near = FLT_MIN;
+	double far = DBL_MAX;
+	double near = DBL_MIN;
 	
 	if (!intersect1D(ray.origin[0],ray.direction[0],aabbmin[0],aabbmax[0],near,far)) return false;
 	if (!intersect1D(ray.origin[1],ray.direction[1],aabbmin[1],aabbmax[1],near,far)) return false;

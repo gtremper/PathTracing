@@ -5,7 +5,6 @@
 #include <stack>
 #include <string>
 #include <vector>
-#include "float.h"
 
 #include "FreeImage.h"
 #include "Shapes.h"
@@ -56,10 +55,10 @@ Scene::~Scene() {
 	}
 }
  
-Ray Scene::castEyeRay(float i, float j){
-	float alpha = (2.0*i-width)/width;
+Ray Scene::castEyeRay(double i, double j){
+	double alpha = (2.0*i-width)/width;
 	alpha *=tan(fovx/2.0);
-	float beta = (2.0*j-height)/height;
+	double beta = (2.0*j-height)/height;
 	beta *= tan(fovy/2.0);
 	
 	Ray ray(eye, alpha*u + beta*v - w);
@@ -100,7 +99,7 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 	} else if (cmd == "output") {
 		line >> filename;
 	} else if (cmd == "camera") {
-		float arg1, arg2, arg3;
+		double arg1, arg2, arg3;
 		line >> arg1 >> arg2 >> arg3;
 		eye = vec3(arg1,arg2,arg3);
 		
@@ -112,10 +111,10 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		setCoordinateFrame(lookat,up);
 		line >> fovy;
 		fovy*=pi/180.0;
-		float d = height/(2.0 * tan(fovy*0.5));
+		double d = height/(2.0 * tan(fovy*0.5));
 		fovx = 2. * atan(width/(2.0*d));
 	} else if (cmd == "sphere") {
-		float arg1, arg2, arg3, arg4;
+		double arg1, arg2, arg3, arg4;
 		line >> arg1;
 		line >> arg2;
 		line >> arg3;
@@ -149,14 +148,14 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		verts.reserve(maxvertnorms);
 		verts.reserve(maxvertnorms);
 	} else if (cmd == "vertex") {
-		float arg1, arg2, arg3;
+		double arg1, arg2, arg3;
 		line >> arg1;
 		line >> arg2;
 		line >> arg3;
 		vec3 v(arg1,arg2,arg3);
 		verts.push_back(v);
 	} else if (cmd == "vertexnormal") {
-		float arg1, arg2, arg3;
+		double arg1, arg2, arg3;
 		line >> arg1;
 		line >> arg2;
 		line >> arg3;
@@ -207,20 +206,20 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		t->refractivity = refractivity;
 		objects.push_back(t);
 	} else if(cmd == "translate") {
-		float arg1,arg2,arg3;
+		double arg1,arg2,arg3;
 		line >> arg1;
 		line >> arg2;
 		line >> arg3;
 		mv.top() *= Transform::translate(arg1, arg2, arg3);
 	} else if(cmd == "rotate") {
-		float arg1,arg2,arg3,arg4;
+		double arg1,arg2,arg3,arg4;
 		line >> arg1;
 		line >> arg2;
 		line >> arg3;
 		line >> arg4;
 		mv.top() *= Transform::rotate(arg4,vec3(arg1,arg2,arg3));
 	} else if (cmd=="scale") {
-		float arg1,arg2,arg3;
+		double arg1,arg2,arg3;
 		line >> arg1;
 		line >> arg2;
 		line >> arg3;
@@ -230,13 +229,13 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 	} else if (cmd == "popTransform"){
 		mv.pop();
 	} else if (cmd == "directional") {
-		float x,y,z,r,g,b;
+		double x,y,z,r,g,b;
 		line >> x >> y >> z >> r >> g >> b;
 		vec3 dir = vec3(mv.top()*vec4(x,y,z,0.0));
 		DirectionalLight* light = new DirectionalLight(vec3(r,g,b),dir);
 		lights.push_back(light);
 	} else if (cmd == "point") {
-		float x,y,z,r,g,b;
+		double x,y,z,r,g,b;
 		line >> x >> y >> z >> r >> g >> b;
 		vec3 point = vec3(mv.top()*vec4(x,y,z,1.0f));
 		PointLight* light = new PointLight(vec3(r,g,b),vec3(x,y,z),constant,linear,quadratic);
@@ -246,21 +245,21 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 	} else if (cmd == "attenuation") {
 		line >> constant >> linear >> quadratic;
 	} else if (cmd == "ambient") {
-		float arg1, arg2, arg3;
+		double arg1, arg2, arg3;
 		line >> arg1 >> arg2 >> arg3;
 		ambient = vec3(arg1,arg2,arg3);
 	} else if (cmd == "diffuse") {
-		float arg1, arg2, arg3;
+		double arg1, arg2, arg3;
 		line >> arg1 >> arg2 >> arg3;
 		diffuse = vec3(arg1,arg2,arg3);
 	} else if (cmd == "specular") {
-		float arg1, arg2, arg3;
+		double arg1, arg2, arg3;
 		line >> arg1 >> arg2 >> arg3;
 		specular = vec3(arg1,arg2,arg3);
 	} else if (cmd == "shininess") {
 		line >> shininess;
 	} else if (cmd == "emission") {
-		float arg1, arg2, arg3;
+		double arg1, arg2, arg3;
 		line >> arg1 >> arg2 >> arg3;
 		emission = vec3(arg1,arg2,arg3);
 	} else if (cmd == "indexofrefraction") {
