@@ -33,7 +33,7 @@ GLuint fragmentshader;
 GLuint shaderprogram;
 GLuint texture;
 FIBITMAP* bitmap;
-double * pixels;
+vec3 * pixels;
 
 
 
@@ -81,14 +81,14 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	return color;
 }
 
+/* ouputs bitmap to global variable*/
 void raytrace(double rayscast) {
-	//FreeImage_Initialise();
 	
-	//FIBITMAP* bitmap = FreeImage_Allocate(width, height, BPP);
-	
-	//if (!bitmap) exit(1);
 	double subdivisions = scene->antialias;
 	double subdivide = 1/subdivisions;
+	
+	double old_weight = rayscast/(rayscast+1.0);
+	double new_weight = 1.0 - old_weight;
 	
 	#pragma omp parallel for
 	for (int j=0; j<height; j++){
@@ -107,8 +107,10 @@ void raytrace(double rayscast) {
 					color += findColor(scene, ray, scene->maxdepth);
 				}
 			}
-			color /= (subdivisions * subdivisions);
-			
+			color *= (subdivide * subdivide);
+			pixels[i + width*j] *= old_weight;
+			pixels[i + width*j] += new_weight*color;
+			color = pixels[i + width*j];
 			rgb.rgbRed = min(color[0],1.0)*255.0;
 			rgb.rgbGreen = min(color[1],1.0)*255.0;
 			rgb.rgbBlue = min(color[2],1.0)*255.0;
@@ -163,9 +165,9 @@ void init(char* filename) {
 	rays_cast = 0.0;
 	width = scene->width;
 	height = scene->height;
-	//pixels = new double[width][height];
+	pixels = new vec3[width*height];
+	memset(pixels, 0, sizeof(vec3)*width*height);
 	bitmap = FreeImage_Allocate(width, height, BPP);
-	//raytrace(0);
 	
 	FreeImage_Initialise();
 	

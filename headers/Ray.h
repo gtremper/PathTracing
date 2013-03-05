@@ -12,10 +12,5 @@ public:
 	vec3 direction;	
 };
 
-struct pixel {
-	double red;
-	double green;
-	double blue;
-};
 
 #endif
