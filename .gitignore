@@ -7,11 +7,6 @@
 *.so
 *.dylib
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-
 # latex
 hw1.pdf
 *.aux
