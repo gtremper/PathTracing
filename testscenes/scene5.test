@@ -1,10 +1,10 @@
 #Thousand Spheres
-size 840 680
+size 640 480
 camera 0 0 0 0 0 -1 0 1 0 45
 output scene5.png
 
 maxdepth 5
-antialias 4
+antialias 1
 
 point 0 20 -40 1 1 1
 directional 0.5 0.5 -0.5 0 0.3 0

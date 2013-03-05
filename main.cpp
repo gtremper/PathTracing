@@ -10,6 +10,7 @@
 #include <GLUT/glut.h>
 
 #include "FreeImage.h"
+#include "shaders.h"
 #include "Shapes.h"
 #include "Intersection.h"
 #include "Light.h"
@@ -20,9 +21,25 @@
 
 using namespace std;
 
-vec3 findColor(Scene& scene, Ray& ray, int depth) {
+/* Paramaters */
+double rays_cast;
+Scene* scene;
+int height;
+int width;
 
-	Intersection hit = scene.KDTree->intersect(ray);
+/* Shaders */
+GLuint vertexshader;
+GLuint fragmentshader;
+GLuint shaderprogram;
+GLuint texture;
+FIBITMAP* bitmap;
+double * pixels;
+
+
+
+vec3 findColor(Scene* scene, Ray& ray, int depth) {
+
+	Intersection hit = scene->KDTree->intersect(ray);
 	
 	if(!hit.primative) {
 		return vec3(0,0,0); //background color
@@ -33,9 +50,9 @@ vec3 findColor(Scene& scene, Ray& ray, int depth) {
 	vec3 normal = hit.primative->getNormal(hit.point);
 	double c1 = -glm::dot(normal, ray.direction);
 	
-	vector<Light*>::iterator light=scene.lights.begin();
-	for(; light!=scene.lights.end(); ++light){
-		color += (*light)->shade(hit,*scene.KDTree,normal);
+	vector<Light*>::iterator light = scene->lights.begin();
+	for(; light!=scene->lights.end(); ++light){
+		color += (*light)->shade(hit, scene->KDTree, normal);
 	}
 	
 	Ray reflectedRay = Ray(hit.point+EPSILON*normal, ray.direction+(2.0*normal*c1));
@@ -64,30 +81,30 @@ vec3 findColor(Scene& scene, Ray& ray, int depth) {
 	return color;
 }
 
-void raytrace(Scene& scene) {
-	FreeImage_Initialise();
+void raytrace(double rayscast) {
+	//FreeImage_Initialise();
 	
-	FIBITMAP* bitmap = FreeImage_Allocate(scene.width, scene.height, BPP);
+	//FIBITMAP* bitmap = FreeImage_Allocate(width, height, BPP);
 	
-	if (!bitmap) exit(1);
-	double subdivisions = scene.antialias;
+	//if (!bitmap) exit(1);
+	double subdivisions = scene->antialias;
 	double subdivide = 1/subdivisions;
 	
 	#pragma omp parallel for
-	for (int j=0; j<scene.height; j++){
+	for (int j=0; j<height; j++){
 		int tid = omp_get_thread_num();
 		if(tid == 0) {
-		   clog << "Progress: "<< (j*100*omp_get_num_threads())/scene.height <<"%"<<"\r";
+		   clog << "Progress: "<< (j*100*omp_get_num_threads())/scene->height <<"%"<<"\r";
 		}
 		RGBQUAD rgb;
-		for (int i=0; i<scene.width; i++) {			
+		for (int i=0; i<width; i++) {			
 			vec3 color;
 			for(double a=0; a<subdivisions; a+=1) {
 				for(double b=0; b<subdivisions; b+=1) {
 					double randomNum1 = ((double)rand()/(double)RAND_MAX) * subdivide;
 					double randomNum2 = ((double)rand()/(double)RAND_MAX) * subdivide;
-					Ray ray = scene.castEyeRay(i+(a*subdivide) + randomNum1,j+(b*subdivide)+randomNum2);
-					color += findColor(scene, ray, scene.maxdepth);
+					Ray ray = scene->castEyeRay(i+(a*subdivide) + randomNum1,j+(b*subdivide)+randomNum2);
+					color += findColor(scene, ray, scene->maxdepth);
 				}
 			}
 			color /= (subdivisions * subdivisions);
@@ -98,12 +115,102 @@ void raytrace(Scene& scene) {
 			FreeImage_SetPixelColor(bitmap,i,j,&rgb);
 		}
 	}
-	printf("Progress: 100%%\n");
-	if (FreeImage_Save(FIF_PNG, bitmap, scene.filename.c_str(), 0)){
-		cout << "Image successfully saved!" << endl;
-	}
 	
-	FreeImage_DeInitialise();
+	
+	//BYTE* bits = FreeImage_GetBits(bitmap);
+	//gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+	//printf("Progress: 100%%\n");
+	//if (FreeImage_Save(FIF_PNG, bitmap, scene->filename.c_str(), 0)){
+	//	cout << "Image successfully saved!" << endl;
+	//}
+	
+	//FreeImage_DeInitialise();
+}
+
+void reshape(int w, int h){
+	glMatrixMode(GL_PROJECTION);
+	width = w;
+	height = h;
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0,width,0,height,-1,1);
+	glPopMatrix();
+	glViewport(0, 0, w, h);
+}
+
+void keyboard(unsigned char key, int x, int y) {
+	BYTE* bits;
+	switch(key){
+		case 'l':
+			raytrace(rays_cast);
+			bits = FreeImage_GetBits(bitmap);
+			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+			rays_cast += 1.0;
+			break;
+		case 27:  // Escape to quit
+			FreeImage_DeInitialise();
+			delete scene;
+			delete pixels;
+			exit(0);
+			break;
+			
+	}
+	glutPostRedisplay();
+}
+
+void init(char* filename) {
+	scene = new Scene(filename);
+	rays_cast = 0.0;
+	width = scene->width;
+	height = scene->height;
+	//pixels = new double[width][height];
+	bitmap = FreeImage_Allocate(width, height, BPP);
+	//raytrace(0);
+	
+	FreeImage_Initialise();
+	
+	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
+	fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
+	shaderprogram = initprogram(vertexshader, fragmentshader);
+	glGenTextures(1, &texture);
+	
+	glEnable(GL_TEXTURE_2D) ;
+	GLuint texsampler ; 
+	texsampler = glGetUniformLocation(shaderprogram, "tex") ; 
+	glUniform1i(texsampler,0) ; // Could also be GL_TEXTURE0
+	glBindTexture(GL_TEXTURE_2D, texture);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) ;
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) ;
+	
+	//raytrace(0);
+	BYTE* bits = FreeImage_GetBits(bitmap);
+	gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+}
+
+void display(){
+	glClearColor(0,0,0,0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glMatrixMode(GL_MODELVIEW);
+	
+	glm::mat4 mv = glm::lookAt(glm::vec3(0,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
+	glLoadMatrixf(&mv[0][0]);
+	
+	glBegin(GL_QUADS);
+	glTexCoord2f(0, 0); glVertex3f(-1, -1, 0);
+	glTexCoord2f(0, 1); glVertex3f(-1, 1, 0);
+	glTexCoord2f(1, 1); glVertex3f(1, 1, 0);
+	glTexCoord2f(1, 0); glVertex3f(1, -1, 0);
+	
+	//glColor3f(1,0,0); glVertex3f(-1, -1, 0);
+	//glColor3f(0,1,0); glVertex3f(-1, 1, 0);
+	//glColor3f(0,0,1); glVertex3f(1, 1, 0);
+	//glColor3f(1,1,1); glVertex3f(1, -1, 0);
+	glEnd();
+	
+	glutSwapBuffers();
 }
 
 int main(int argc, char* argv[]){
@@ -111,8 +218,15 @@ int main(int argc, char* argv[]){
 		cerr << "You need 1 scene file as the argument" << endl;
 		exit(1);
 	}
-	Scene scene(argv[1]);
 	srand(time(0));
-	raytrace(scene);
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+	glutCreateWindow("Path Tracer");
+	init(argv[1]);
+	glutDisplayFunc(display);
+	glutKeyboardFunc(keyboard);
+	glutReshapeFunc(reshape);
+	glutReshapeWindow(width,height);
+	glutMainLoop();
 	return 0;
 }

@@ -18,7 +18,7 @@ DirectionalLight::DirectionalLight(const vec3& c,const vec3& dir) {
 	direction = glm::normalize(dir);
 }
 
-vec3 DirectionalLight::shade(const Intersection& hit, TreeNode& tree, const vec3& normal){
+vec3 DirectionalLight::shade(const Intersection& hit, TreeNode* tree, const vec3& normal){
 	if(!isVisible(hit.point+EPSILON*normal,tree)) {
 		return vec3(0.0,0.0,0.0);
 	}
@@ -31,9 +31,9 @@ vec3 DirectionalLight::shade(const Intersection& hit, TreeNode& tree, const vec3
 	return shade;
 }
 
-bool DirectionalLight::isVisible(const vec3& point, TreeNode& tree) {
+bool DirectionalLight::isVisible(const vec3& point, TreeNode* tree) {
 	Ray ray(point,direction);
-	Intersection hit = tree.intersect(ray);
+	Intersection hit = tree->intersect(ray);
 	return !hit.primative;
 }
 
@@ -46,7 +46,7 @@ PointLight::PointLight(const vec3& colour,const vec3& poi, double con, double li
 	quadratic = quad;
 }
 
-vec3 PointLight::shade(const Intersection& hit, TreeNode& tree, const vec3& normal) {
+vec3 PointLight::shade(const Intersection& hit, TreeNode* tree, const vec3& normal) {
 	double totalshots = shadowrays;
 	int numberOfHits = 0;
 	for(int i =0; i<totalshots; i++){
@@ -69,7 +69,7 @@ vec3 PointLight::shade(const Intersection& hit, TreeNode& tree, const vec3& norm
 	return (numberOfHits/totalshots)*shade;
 }
 
-bool PointLight::isVisible(const vec3& p, TreeNode& tree) {
+bool PointLight::isVisible(const vec3& p, TreeNode* tree) {
 	vec3 randPoint;
 	double radius = lightradius;
 	double randomNum1 = ((double)rand()/(double)RAND_MAX);
@@ -85,7 +85,7 @@ bool PointLight::isVisible(const vec3& p, TreeNode& tree) {
 	vec3 direction = glm::normalize(randPoint-p);
 	Ray ray(p,direction);
 	double dist = glm::distance(randPoint,p);
-	Intersection hit = tree.intersect(ray);
+	Intersection hit = tree->intersect(ray);
 	if(hit.primative){
 		if(glm::distance(p,hit.point) < dist){
 			return false;
