@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "omp.h"
+#include <sstream>
 #include <time.h>
 #include <GLUT/glut.h>
 
@@ -91,13 +92,13 @@ void raytrace(double rayscast) {
 	double new_weight = 1.0 - old_weight;
 	
 	#pragma omp parallel for
-	for (int j=0; j<height; j++){
+	for (int j=0; j<scene->height; j++){
 		int tid = omp_get_thread_num();
 		if(tid == 0) {
 		   clog << "Progress: "<< (j*100*omp_get_num_threads())/scene->height <<"%"<<"\r";
 		}
 		RGBQUAD rgb;
-		for (int i=0; i<width; i++) {			
+		for (int i=0; i<scene->width; i++) {			
 			vec3 color;
 			for(double a=0; a<subdivisions; a+=1) {
 				for(double b=0; b<subdivisions; b+=1) {
@@ -108,9 +109,9 @@ void raytrace(double rayscast) {
 				}
 			}
 			color *= (subdivide * subdivide);
-			pixels[i + width*j] *= old_weight;
-			pixels[i + width*j] += new_weight*color;
-			color = pixels[i + width*j];
+			pixels[i + scene->width*j] *= old_weight;
+			pixels[i + scene->width*j] += new_weight*color;
+			color = pixels[i + scene->width*j];
 			rgb.rgbRed = min(color[0],1.0)*255.0;
 			rgb.rgbGreen = min(color[1],1.0)*255.0;
 			rgb.rgbBlue = min(color[2],1.0)*255.0;
@@ -135,27 +136,31 @@ void reshape(int w, int h){
 	height = h;
 	glPushMatrix();
 	glLoadIdentity();
-	glOrtho(0,width,0,height,-1,1);
+	glOrtho(0,1,0,1,-1,1);
 	glPopMatrix();
 	glViewport(0, 0, w, h);
 }
 
 void keyboard(unsigned char key, int x, int y) {
 	BYTE* bits;
-	time_t seconds;
+	time_t seconds;	
+	stringstream ss;
 	switch(key){
 		case 'l':
 			seconds = time(NULL);
-			
 			raytrace(rays_cast);
 			bits = FreeImage_GetBits(bitmap);
-			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, scene->width, scene->height,
+				0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
 			rays_cast += 1.0;
 			cout << "Number of Samples: " << rays_cast <<
 			"\tTime: " << time(NULL)-seconds <<" seconds" << endl;
 			break;
 		case 's':
-			FreeImage_Save(FIF_PNG, bitmap, scene->filename.c_str(), 0);
+			ss << scene->filename<<"_"<< int(rays_cast) << ".png";
+			FreeImage_Save(FIF_PNG, bitmap, ss.str().c_str(), 0);
 			cout << "Image saved!" << endl;
 			break;
 		case 'r':
@@ -185,33 +190,32 @@ void init(char* filename) {
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
 	fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
 	shaderprogram = initprogram(vertexshader, fragmentshader);
-	glGenTextures(1, &texture);
 	
+	glGenTextures(1, &texture);
 	glEnable(GL_TEXTURE_2D) ;
 	glBindTexture(GL_TEXTURE_2D, texture);
-	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) ;
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) ;
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
 	BYTE* bits = FreeImage_GetBits(bitmap);
-	gluBuild2DMipmaps(GL_TEXTURE_2D, 4, scene->width, scene->height, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)bits);
-}
-
-void display(){
-	glClearColor(0,0,0,0);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glMatrixMode(GL_MODELVIEW);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, scene->width, scene->height,
+		0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+	
 	
 	glm::mat4 mv = glm::lookAt(glm::vec3(0,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
 	glLoadMatrixf(&mv[0][0]);
+}
+
+void display(){
+	glClearColor(0.1,0.1,0.1,0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glMatrixMode(GL_MODELVIEW);
 	
 	glBegin(GL_QUADS);
-	glTexCoord2f(0, 0); glVertex3f(-1, -1, 0);
-	glTexCoord2f(0, 1); glVertex3f(-1, 1, 0);
-	glTexCoord2f(1, 1); glVertex3f(1, 1, 0);
-	glTexCoord2f(1, 0); glVertex3f(1, -1, 0);
+	glTexCoord2d(0, 0); glVertex3d(-1, -1, 0);
+	glTexCoord2d(0, 1); glVertex3d(-1, 1, 0);
+	glTexCoord2d(1, 1); glVertex3d(1, 1, 0);
+	glTexCoord2d(1, 0); glVertex3d(1, -1, 0);
 	glEnd();
 	
 	glutSwapBuffers();

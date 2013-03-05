@@ -19,7 +19,7 @@ using namespace std;
 
 // sets default values
 Scene::Scene(char* file) {
-	filename = "OUTPUT.png";
+	filename = "OUTPUT";
 	maxdepth = 5; 
 	ambient = vec3(0.2,0.2,0.2);
 	diffuse = vec3(0,0,0);
@@ -98,6 +98,7 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		line >> maxdepth;
 	} else if (cmd == "output") {
 		line >> filename;
+		filename.erase(filename.end()-4,filename.end());
 	} else if (cmd == "camera") {
 		double arg1, arg2, arg3;
 		line >> arg1 >> arg2 >> arg3;
