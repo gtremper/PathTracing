@@ -142,12 +142,24 @@ void reshape(int w, int h){
 
 void keyboard(unsigned char key, int x, int y) {
 	BYTE* bits;
+	time_t seconds;
 	switch(key){
 		case 'l':
+			seconds = time(NULL);
+			
 			raytrace(rays_cast);
 			bits = FreeImage_GetBits(bitmap);
-			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+			gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
 			rays_cast += 1.0;
+			cout << "Number of Samples: " << rays_cast <<
+			"\tTime: " << time(NULL)-seconds <<" seconds" << endl;
+			break;
+		case 's':
+			FreeImage_Save(FIF_PNG, bitmap, scene->filename.c_str(), 0);
+			cout << "Image saved!" << endl;
+			break;
+		case 'r':
+			glutReshapeWindow(scene->width,scene->height);
 			break;
 		case 27:  // Escape to quit
 			FreeImage_DeInitialise();
@@ -167,9 +179,8 @@ void init(char* filename) {
 	height = scene->height;
 	pixels = new vec3[width*height];
 	memset(pixels, 0, sizeof(vec3)*width*height);
-	bitmap = FreeImage_Allocate(width, height, BPP);
-	
 	FreeImage_Initialise();
+	bitmap = FreeImage_Allocate(width, height, BPP);
 	
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
 	fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
@@ -177,9 +188,6 @@ void init(char* filename) {
 	glGenTextures(1, &texture);
 	
 	glEnable(GL_TEXTURE_2D) ;
-	GLuint texsampler ; 
-	texsampler = glGetUniformLocation(shaderprogram, "tex") ; 
-	glUniform1i(texsampler,0) ; // Could also be GL_TEXTURE0
 	glBindTexture(GL_TEXTURE_2D, texture);
 	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -187,9 +195,8 @@ void init(char* filename) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT) ;
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT) ;
 	
-	//raytrace(0);
 	BYTE* bits = FreeImage_GetBits(bitmap);
-	gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+	gluBuild2DMipmaps(GL_TEXTURE_2D, 4, scene->width, scene->height, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)bits);
 }
 
 void display(){
@@ -205,11 +212,6 @@ void display(){
 	glTexCoord2f(0, 1); glVertex3f(-1, 1, 0);
 	glTexCoord2f(1, 1); glVertex3f(1, 1, 0);
 	glTexCoord2f(1, 0); glVertex3f(1, -1, 0);
-	
-	//glColor3f(1,0,0); glVertex3f(-1, -1, 0);
-	//glColor3f(0,1,0); glVertex3f(-1, 1, 0);
-	//glColor3f(0,0,1); glVertex3f(1, 1, 0);
-	//glColor3f(1,1,1); glVertex3f(1, -1, 0);
 	glEnd();
 	
 	glutSwapBuffers();
