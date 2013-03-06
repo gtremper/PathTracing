@@ -19,6 +19,7 @@
 
 #define BPP 24
 #define EPSILON 0.0000001
+#define BUFFER_OFFSET(i) (reinterpret_cast<void*>(i))
 
 using namespace std;
 
@@ -35,8 +36,7 @@ GLuint shaderprogram;
 GLuint texture;
 FIBITMAP* bitmap;
 vec3 * pixels;
-
-
+bool update;
 
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
@@ -116,47 +116,22 @@ void raytrace(double rayscast) {
 			rgb.rgbGreen = min(color[1],1.0)*255.0;
 			rgb.rgbBlue = min(color[2],1.0)*255.0;
 			FreeImage_SetPixelColor(bitmap,i,j,&rgb);
-		}
+		}          
 	}
-	
-	
-	//BYTE* bits = FreeImage_GetBits(bitmap);
-	//gluBuild2DMipmaps(GL_TEXTURE_2D, 4, width, height, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)bits);
-	//printf("Progress: 100%%\n");
-	//if (FreeImage_Save(FIF_PNG, bitmap, scene->filename.c_str(), 0)){
-	//	cout << "Image successfully saved!" << endl;
-	//}
-	
-	//FreeImage_DeInitialise();
 }
 
 void reshape(int w, int h){
-	glMatrixMode(GL_PROJECTION);
 	width = w;
 	height = h;
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho(0,1,0,1,-1,1);
-	glPopMatrix();
 	glViewport(0, 0, w, h);
+	glutPostRedisplay();
 }
 
 void keyboard(unsigned char key, int x, int y) {
-	BYTE* bits;
-	time_t seconds;	
 	stringstream ss;
 	switch(key){
 		case 'l':
-			seconds = time(NULL);
-			raytrace(rays_cast);
-			bits = FreeImage_GetBits(bitmap);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, scene->width, scene->height,
-				0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
-			rays_cast += 1.0;
-			cout << "Number of Samples: " << rays_cast <<
-			"\tTime: " << time(NULL)-seconds <<" seconds" << endl;
+			update = true;
 			break;
 		case 's':
 			ss << scene->filename<<"_"<< int(rays_cast) << ".png";
@@ -180,6 +155,7 @@ void keyboard(unsigned char key, int x, int y) {
 void init(char* filename) {
 	scene = new Scene(filename);
 	rays_cast = 0.0;
+	update = false;
 	width = scene->width;
 	height = scene->height;
 	pixels = new vec3[width*height];
@@ -194,22 +170,37 @@ void init(char* filename) {
 	glGenTextures(1, &texture);
 	glEnable(GL_TEXTURE_2D) ;
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glActiveTexture(GL_TEXTURE0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	
 	BYTE* bits = FreeImage_GetBits(bitmap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, scene->width, scene->height,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
 		0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
 	
-	
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(-1,1,-1,1,-1,1);
+	glMatrixMode(GL_MODELVIEW);
 	glm::mat4 mv = glm::lookAt(glm::vec3(0,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
 	glLoadMatrixf(&mv[0][0]);
+ 
 }
 
 void display(){
-	glClearColor(0.1,0.1,0.1,0);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glMatrixMode(GL_MODELVIEW);
+	
+	if (update){
+		time_t seconds = time(NULL);
+		raytrace(rays_cast);
+		BYTE* bits = FreeImage_GetBits(bitmap);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
+			0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+		rays_cast += 1.0;
+		cout << "Number of Samples: " << rays_cast <<
+		"\tTime: " << time(NULL)-seconds <<" seconds" << endl;
+		update = false;
+	}	
 	
 	glBegin(GL_QUADS);
 	glTexCoord2d(0, 0); glVertex3d(-1, -1, 0);

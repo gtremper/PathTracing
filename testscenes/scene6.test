@@ -7,7 +7,7 @@ maxdepth 5
 
 shadowrays 1
 lightradius 0
-antialias 2
+antialias 1
 
 maxverts 12
 #planar face

@@ -4,7 +4,7 @@ size 640 480
 camera 0 5 15 0 5 -1 0 1 0 45
 output scene7.png
 
-antialias 1
+antialias 2
 lightradius 0
 shadowrays 1
 
