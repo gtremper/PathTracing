@@ -2,6 +2,7 @@ size 640 480
 
 camera 0 0 1 0 0 -1 0 1 0 45
 maxdepth 5
+antialias 4
 
 ambient 0 0 0
 specular 0 0 0
@@ -27,10 +28,10 @@ vertex +1 +1 0
 pushTransform
 	translate 0 0 -3
 	rotate 0 1 0 -50
-	scale 1.75 1.5 1
-	emission 1 1 1
-	tri 0 1 2
-	tri 0 2 3
+	scale 10 10 1
+	emission .4 .4 .4
+	tri 2 1 0
+	tri 3 2 0
 popTransform
 emission 0 0 0
 

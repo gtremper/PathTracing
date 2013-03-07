@@ -38,28 +38,55 @@ FIBITMAP* bitmap;
 vec3 * pixels;
 int update;
 
+vec3 randHem(vec3& norm){
+	vec3 randPoint;
+	double randomNum1 = ((double)rand()/(double)RAND_MAX);
+	double randomNum2 = ((double)rand()/(double)RAND_MAX);
+	double q = 2.0 * M_PI * randomNum1;
+	double f = acos(2.0 * randomNum2 - 1);
+	randPoint[0] = cos(q)*sin(f);
+	randPoint[1] = sin(q)*sin(f);
+	randPoint[2] = cos(f);
+	if(glm::dot(randPoint,norm)<0.0){
+		randPoint = -randPoint;
+	}
+	return randPoint;
+}
+
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
 	Intersection hit = scene->KDTree->intersect(ray);
 	
-	if(!hit.primative) {
+	if(!hit.primative || depth==1) {
 		return vec3(0,0,0); //background color
 	}
 	
-	vec3 color = hit.primative->ambient;
-	color += hit.primative->emission;
 	vec3 normal = hit.primative->getNormal(hit.point);
-	double c1 = -glm::dot(normal, ray.direction);
 	
-	vector<Light*>::iterator light = scene->lights.begin();
-	for(; light!=scene->lights.end(); ++light){
-		color += (*light)->shade(hit, scene->KDTree, normal);
+	/* Tempararily return if hit light */
+	if(hit.primative->emission[0]){
+		double weight = max(0.0,glm::dot(normal,ray.direction));
+		return weight * hit.primative->emission;
 	}
 	
-	Ray reflectedRay = Ray(hit.point+EPSILON*normal, ray.direction+(2.0*normal*c1));
+	vec3 newDirection = randHem(normal);
+	vec3 weight = max(0.0,glm::dot(normal,newDirection)) * hit.primative->diffuse;
+	weight *= 2 * M_PI;
+	Ray newRay(hit.point+EPSILON*normal, newDirection);
+	return weight * findColor(scene, newRay, depth-1);
 	
-	if(depth != 1) {
-		color += hit.primative->specular * findColor(scene, reflectedRay, depth-1);
+	//double c1 = -glm::dot(normal, ray.direction);
+	
+	//vector<Light*>::iterator light = scene->lights.begin();
+	//for(; light!=scene->lights.end(); ++light){
+	//	color += (*light)->shade(hit, scene->KDTree, normal);
+	//}
+	
+	//Ray reflectedRay = Ray(hit.point+EPSILON*normal, ray.direction+(2.0*normal*c1));
+	
+	//if(depth != 1) {
+		//color += hit.primative->specular * findColor(scene, reflectedRay, depth-1);
+		/*
 		if(hit.primative->refractivity) {
 			double n;
 			if(c1 > 0.0) {
@@ -78,14 +105,16 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 			}
 			color += hit.primative->refractivity * findColor(scene, refractedRay, depth-1);
 		}
-	}
-	return color;
+		*/
+	//}
+	//return color;
 }
 
 /* ouputs bitmap to global variable*/
 void raytrace(double rayscast) {
 	
-	double subdivisions = scene->antialias;
+	//double subdivisions = scene->antialias;
+	double subdivisions = 4.0;
 	double subdivide = 1/subdivisions;
 	
 	double old_weight = rayscast/(rayscast+1.0);
@@ -105,7 +134,8 @@ void raytrace(double rayscast) {
 					double randomNum1 = ((double)rand()/(double)RAND_MAX) * subdivide;
 					double randomNum2 = ((double)rand()/(double)RAND_MAX) * subdivide;
 					Ray ray = scene->castEyeRay(i+(a*subdivide) + randomNum1,j+(b*subdivide)+randomNum2);
-					color += findColor(scene, ray, scene->maxdepth);
+					//color += findColor(scene, ray, scene->maxdepth);
+					color += findColor(scene, ray, 100);
 				}
 			}
 			color *= (subdivide * subdivide);
@@ -131,7 +161,7 @@ void keyboard(unsigned char key, int x, int y) {
 	stringstream ss;
 	switch(key){
 		case 'l':
-			update = 5;
+			update = 1000;
 			break;
 		case 's':
 			ss << scene->filename<<"_"<< int(rays_cast) << ".png";
