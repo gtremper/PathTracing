@@ -177,18 +177,7 @@ tri 6 11 7
 tri 10 8 9
 tri 10 9 11
 
-#trinormal 0 2 1
-#trinormal 2 3 1
-#trinormal 0 1 4
-#trinormal 1 5 4
-#trinormal 3 5 1
-#trinormal 3 7 5
-#trinormal 0 4 6
-#trinormal 0 6 2
-#trinormal 2 6 7
-#trinormal 2 7 3
-#trinormal 6 4 5
-#trinormal 6 5 7
+
 popTransform
 
 popTransform

@@ -36,7 +36,7 @@ GLuint shaderprogram;
 GLuint texture;
 FIBITMAP* bitmap;
 vec3 * pixels;
-bool update;
+int update;
 
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
@@ -131,7 +131,7 @@ void keyboard(unsigned char key, int x, int y) {
 	stringstream ss;
 	switch(key){
 		case 'l':
-			update = true;
+			update = 5;
 			break;
 		case 's':
 			ss << scene->filename<<"_"<< int(rays_cast) << ".png";
@@ -199,7 +199,8 @@ void display(){
 		rays_cast += 1.0;
 		cout << "Number of Samples: " << rays_cast <<
 		"\tTime: " << time(NULL)-seconds <<" seconds" << endl;
-		update = false;
+		update -= 1;
+		glutPostRedisplay();
 	}	
 	
 	glBegin(GL_QUADS);
