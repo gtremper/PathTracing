@@ -16,5 +16,6 @@ hw1.pdf
 # Other
 *.DS_Store
 viewer
+raytracer
 tags
 *.png
