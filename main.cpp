@@ -116,7 +116,8 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	if (u1 < threshold) {
 		vec3 newDirection = cos_weighted_hem(normal);
 		Ray newRay(hit.point+EPSILON*normal, newDirection);
-		return hit.primative->diffuse * findColor(scene, newRay, depth-1);
+		double prob = 1.0/threshold;
+		return prob * hit.primative->diffuse * findColor(scene, newRay, depth-1);
 	} else {
 		vec3 reflect = glm::reflect(ray.direction, normal);
 		vec3 newDirection = specular_weighted_hem(reflect, hit.primative->shininess);
@@ -131,6 +132,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 		double prob = cosalpha * (hit.primative->shininess + 1.0) / (2.0 * M_PI);
 		
 		double multiplier = phong / prob;
+		multiplier *= 1.0/(1.0-threshold);
 		return multiplier * hit.primative->specular * findColor(scene, newRay, depth-1);
 	}
 	
