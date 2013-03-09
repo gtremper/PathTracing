@@ -64,10 +64,10 @@ mat4 center_axis(const vec3& norm){
 vec3 cos_weighted_hem(vec3& norm){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
-	
+
 	double theta = acos(sqrt(u1));
 	double phi = 2.0 * M_PI * u2;
-	
+
 	if (theta < EPSILON) {
 		return norm;
 	}
@@ -81,10 +81,10 @@ vec3 cos_weighted_hem(vec3& norm){
 vec3 specular_weighted_hem(vec3& reflection, double n){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
-	
+
 	double alpha = acos( pow( u1, 1.0 / (n + 1.0) ) );
 	double phi = 2.0 * M_PI * u2;
-	
+
 	if (alpha < EPSILON) {
 		return reflection;
 	}
@@ -101,22 +101,22 @@ vec3 specular_weighted_hem(vec3& reflection, double n){
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
 	Intersection hit = scene->KDTree->intersect(ray);
-	
+
 	if(!hit.primative || depth==1) {
 		return vec3(0,0,0); //background color
 	}
-	
+
 	vec3 normal = hit.primative->getNormal(hit.point);
-	
+
 	/* Tempararily return if hit light */
 	if( glm::length(hit.primative->emission) > EPSILON ){
 		return hit.primative->emission;
 	}
-	
+
 	double diffWeight = glm::length(hit.primative->diffuse);
 	double specWeight = glm::length(hit.primative->specular);
 	double threshold = diffWeight / (diffWeight + specWeight);
-	
+
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	if (u1 < threshold) {
 		vec3 newDirection = cos_weighted_hem(normal);
@@ -127,39 +127,39 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 		vec3 reflect = glm::reflect(ray.direction, normal);
 		vec3 newDirection = specular_weighted_hem(reflect, hit.primative->shininess);
 		Ray newRay(hit.point+EPSILON*normal, newDirection);
-		
+
 		vec3 half = glm::normalize(hit.sourceDirection + newDirection);
 		double phong =  pow( max(0.0,glm::dot(half,normal)) , hit.primative->shininess);
-		
+
 		/* Get probability for importance sampling */
 		double cosalpha = glm::dot(newDirection,reflect);
 		cosalpha = pow(cosalpha, hit.primative->shininess);
 		double prob = cosalpha * (hit.primative->shininess + 1.0) / (2.0 * M_PI);
-		
+
 		double multiplier = phong / prob;
 		multiplier *= 1.0/(1.0-threshold);
 		return multiplier * hit.primative->specular * findColor(scene, newRay, depth-1);
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
+
+
+
 	//double c1 = -glm::dot(normal, ray.direction);
-	
+
 	//vector<Light*>::iterator light = scene->lights.begin();
 	//for(; light!=scene->lights.end(); ++light){
 	//	color += (*light)->shade(hit, scene->KDTree, normal);
 	//}
-	
+
 	//Ray reflectedRay = Ray(hit.point+EPSILON*normal, ray.direction+(2.0*normal*c1));
-	
+
 	//if(depth != 1) {
 		//color += hit.primative->specular * findColor(scene, reflectedRay, depth-1);
 		/*
@@ -170,7 +170,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 			} else {
 				n = hit.primative->indexofrefraction/1.003f;
 			}
-			
+
 			double c2 = sqrt(1 - n*n * (1 - c1*c1));
 			Ray refractedRay = Ray(hit.point, glm::normalize((n*ray.direction) + (n*c1-c2)*normal));
 			if(c1>0.0){
@@ -221,7 +221,7 @@ void raytrace(double rayscast) {
 			rgb.rgbGreen = min(color[1],1.0)*255.0;
 			rgb.rgbBlue = min(color[2],1.0)*255.0;
 			FreeImage_SetPixelColor(bitmap,i,j,&rgb);
-		}          
+		}
 	}
 }
 
@@ -252,7 +252,7 @@ void keyboard(unsigned char key, int x, int y) {
 			delete pixels;
 			exit(0);
 			break;
-			
+
 	}
 	glutPostRedisplay();
 }
@@ -267,34 +267,34 @@ void init(char* filename) {
 	memset(pixels, 0, sizeof(vec3)*width*height);
 	FreeImage_Initialise();
 	bitmap = FreeImage_Allocate(width, height, BPP);
-	
+
 	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
 	fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
 	shaderprogram = initprogram(vertexshader, fragmentshader);
-	
+
 	glGenTextures(1, &texture);
 	glEnable(GL_TEXTURE_2D) ;
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glActiveTexture(GL_TEXTURE0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	
+
 	BYTE* bits = FreeImage_GetBits(bitmap);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
 		0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
-	
+
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(-1,1,-1,1,-1,1);
 	glMatrixMode(GL_MODELVIEW);
 	glm::mat4 mv = glm::lookAt(glm::vec3(0,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
 	glLoadMatrixf(&mv[0][0]);
- 
+
 }
 
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
-	
+
 	if (update){
 		time_t seconds = time(NULL);
 		raytrace(rays_cast);
@@ -306,15 +306,15 @@ void display(){
 		"\tTime: " << time(NULL)-seconds <<" seconds" << endl;
 		update -= 1;
 		glutPostRedisplay();
-	}	
-	
+	}
+
 	glBegin(GL_QUADS);
 	glTexCoord2d(0, 0); glVertex3d(-1, -1, 0);
 	glTexCoord2d(0, 1); glVertex3d(-1, 1, 0);
 	glTexCoord2d(1, 1); glVertex3d(1, 1, 0);
 	glTexCoord2d(1, 0); glVertex3d(1, -1, 0);
 	glEnd();
-	
+
 	glutSwapBuffers();
 }
 
