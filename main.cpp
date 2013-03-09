@@ -80,7 +80,17 @@ vec3 specular_weighted_hem(vec3& reflection, double n){
 	double alpha = acos( pow( u1, 1.0 / (n + 1.0) ) );
 	double phi = 2.0 * M_PI * u2;
 	
-	return vec3(1,1,1);
+	if (alpha < EPSILON) {
+		return reflection;
+	}
+	
+	if (alpha > M_PI/2.0) alpha = M_PI/2.0;
+	
+	if (1.0 - reflection[2] > EPSILON) {
+		center_axis(reflection, alpha, phi);
+	}
+	
+	return vec3(cos(phi)*sin(alpha), sin(phi)*sin(alpha), cos(alpha));	
 }
 
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
@@ -94,13 +104,45 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	vec3 normal = hit.primative->getNormal(hit.point);
 	
 	/* Tempararily return if hit light */
-	if(hit.primative->emission[0]){
+	if( glm::length(hit.primative->emission) > EPSILON ){
 		return hit.primative->emission;
 	}
 	
-	vec3 newDirection = cos_weighted_hem(normal);
-	Ray newRay(hit.point+EPSILON*normal, newDirection);
-	return hit.primative->diffuse * findColor(scene, newRay, depth-1);
+	double diffWeight = glm::length(hit.primative->diffuse);
+	double specWeight = glm::length(hit.primative->specular);
+	double threshold = diffWeight / (diffWeight + specWeight);
+	
+	double u1 = ((double)rand()/(double)RAND_MAX);
+	if (u1 < threshold) {
+		vec3 newDirection = cos_weighted_hem(normal);
+		Ray newRay(hit.point+EPSILON*normal, newDirection);
+		return hit.primative->diffuse * findColor(scene, newRay, depth-1);
+	} else {
+		vec3 reflect = glm::reflect(ray.direction, normal);
+		vec3 newDirection = specular_weighted_hem(reflect, hit.primative->shininess);
+		Ray newRay(hit.point+EPSILON*normal, newDirection);
+		
+		vec3 half = glm::normalize(hit.sourceDirection + newDirection);
+		double phong =  pow( max(0.0,glm::dot(half,normal)) , hit.primative->shininess);
+		
+		/* Get probability for importance sampling */
+		double cosalpha = glm::dot(newDirection,reflect);
+		cosalpha = pow(cosalpha, hit.primative->shininess);
+		double prob = cosalpha * (hit.primative->shininess + 1.0) / (2.0 * M_PI);
+		
+		double multiplier = phong / prob;
+		return multiplier * hit.primative->specular * findColor(scene, newRay, depth-1);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	//double c1 = -glm::dot(normal, ray.direction);
 	
