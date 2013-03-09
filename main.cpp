@@ -39,18 +39,37 @@ vec3 * pixels;
 int update;
 
 vec3 randHem(vec3& norm){
-	vec3 randPoint;
-	double randomNum1 = ((double)rand()/(double)RAND_MAX);
-	double randomNum2 = ((double)rand()/(double)RAND_MAX);
-	double q = 2.0 * M_PI * randomNum1;
-	double f = acos(2.0 * randomNum2 - 1);
-	randPoint[0] = cos(q)*sin(f);
-	randPoint[1] = sin(q)*sin(f);
-	randPoint[2] = cos(f);
-	if(glm::dot(randPoint,norm)<0.0){
-		randPoint = -randPoint;
+	double u1 = ((double)rand()/(double)RAND_MAX);
+	double u2 = ((double)rand()/(double)RAND_MAX);
+	
+	double theta = acos(sqrt(u1));
+	double phi = 2.0 * M_PI * u2;
+	
+	if (theta < EPSILON) {
+		return norm;
 	}
-	return randPoint;
+	if (1.0-norm[2] < EPSILON){
+		return vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
+	}
+	
+	const vec3 X = vec3(1,0,0);
+	const vec3 Y = vec3(0,1,0);
+	const vec3 Z = vec3(0,0,1);
+	
+	
+	double dTheta = acos(glm::dot(norm, Z));
+	vec3 xproj = glm::dot(X, norm) * X;
+	vec3 yproj = glm::dot(Y,norm) * Y;
+	vec3 xy_plane_vec = glm::normalize(xproj+yproj);
+	double dPhi = acos(glm::dot(X, xy_plane_vec));
+	if (xy_plane_vec[1] < 0.0){
+		dPhi = -dPhi;
+	}
+	
+	theta += dTheta;
+	phi += dPhi;
+
+	return vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));	
 }
 
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
@@ -65,15 +84,12 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	
 	/* Tempararily return if hit light */
 	if(hit.primative->emission[0]){
-		double weight = max(0.0,glm::dot(normal,ray.direction));
-		return weight * hit.primative->emission;
+		return hit.primative->emission;
 	}
 	
 	vec3 newDirection = randHem(normal);
-	vec3 weight = max(0.0,glm::dot(normal,newDirection)) * hit.primative->diffuse;
-	weight *= 2 * M_PI;
 	Ray newRay(hit.point+EPSILON*normal, newDirection);
-	return weight * findColor(scene, newRay, depth-1);
+	return hit.primative->diffuse * findColor(scene, newRay, depth-1);
 	
 	//double c1 = -glm::dot(normal, ray.direction);
 	
@@ -113,8 +129,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 /* ouputs bitmap to global variable*/
 void raytrace(double rayscast) {
 	
-	//double subdivisions = scene->antialias;
-	double subdivisions = 4.0;
+	double subdivisions = scene->antialias;
 	double subdivide = 1/subdivisions;
 	
 	double old_weight = rayscast/(rayscast+1.0);
@@ -161,7 +176,7 @@ void keyboard(unsigned char key, int x, int y) {
 	stringstream ss;
 	switch(key){
 		case 'l':
-			update = 1000;
+			update = 1;
 			break;
 		case 's':
 			ss << scene->filename<<"_"<< int(rays_cast) << ".png";

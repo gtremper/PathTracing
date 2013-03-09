@@ -13,7 +13,7 @@ diffuse 0 0 0
 attenuation 1 0.1 0.05
 antialias 1
 shadowrays 1
-lightradius 0.15
+lightradius 0
 
 point 0 0.44 -1.5 0.8 0.8 0.8
 # directional 0 1 -1 0.2 0.2 0.2
@@ -28,8 +28,8 @@ vertex +1 +1 0
 pushTransform
 	translate 0 0 -3
 	rotate 0 1 0 -50
-	scale 10 10 1
-	emission .4 .4 .4
+	scale 1.5 1.5 1
+	emission 1 1 1
 	tri 2 1 0
 	tri 3 2 0
 popTransform
