@@ -200,10 +200,10 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
 /* ouputs bitmap to global variable*/
 void raytrace(double rayscast) {
-	
+
 	double subdivisions = 4;
 	double subdivide = 1/subdivisions;
-	
+
 	double old_weight = rayscast/(rayscast+1.0);
 	double new_weight = 1.0 - old_weight;
 	
@@ -214,7 +214,7 @@ void raytrace(double rayscast) {
 		   clog << "Progress: "<< (j*100*omp_get_num_threads())/scene->height <<"%"<<"\r";
 		}
 		RGBQUAD rgb;
-		for (int i=0; i<scene->width; i++) {			
+		for (int i=0; i<scene->width; i++) {
 			vec3 color;
 			for(double a=0; a<subdivisions; a+=1) {
 				for(double b=0; b<subdivisions; b+=1) {
