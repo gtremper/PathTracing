@@ -43,17 +43,22 @@ const vec3 Y = vec3(0,1,0);
 const vec3 Z = vec3(0,0,1);
 
 
-void center_axis(const vec3& norm, double& theta, double& phi){
-	double dTheta = acos(glm::dot(norm, Z));
-	double xproj = glm::dot(X,norm);
-	double yproj = glm::dot(Y,norm);
-	vec3 xy_plane_vec = glm::normalize(vec3(xproj,yproj,0.0));
-	double dPhi = acos(glm::dot(X, xy_plane_vec));
-	if (xy_plane_vec[1] < 0.0){
-		dPhi = -dPhi;
-	}
-	theta += dTheta;
-	phi += dPhi;
+/** rotate the Z vector in the direction of norm */
+mat4 center_axis(const vec3& norm){
+    mat4 rotation = mat4(1.0);
+    /** rotate in the direction of norm */
+    /** rotate in the direction of phi, assuming phi=0 in direction of X*/
+    vec3 projected = glm::normalize(vec3(norm[0],norm[1],0));
+    /** if we have a negative Y component, our phi is switched, so we negate it */
+    double old_phi = acos(glm::dot(X, projected));
+    double phi_angle = norm[1] > 0 ? old_phi : -old_phi;
+    rotation = glm::rotate(rotation, phi_angle, Z);
+    double theta_angle = acos(glm::dot(Z, norm));
+    rotation = glm::rotate(rotation, theta_angle, Y);
+    cout << norm[0] << " " << norm[1] << " " << norm[2] << endl;
+    vec3 tmp = mat3(rotation) * norm;
+    cout << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl << endl;;
+    return rotation;
 }
 
 vec3 cos_weighted_hem(vec3& norm){
