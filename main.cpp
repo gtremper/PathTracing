@@ -129,7 +129,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 /* ouputs bitmap to global variable*/
 void raytrace(double rayscast) {
 	
-	double subdivisions = scene->antialias;
+	double subdivisions = 4;
 	double subdivide = 1/subdivisions;
 	
 	double old_weight = rayscast/(rayscast+1.0);
