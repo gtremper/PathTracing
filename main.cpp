@@ -38,7 +38,25 @@ FIBITMAP* bitmap;
 vec3 * pixels;
 int update;
 
-vec3 randHem(vec3& norm){
+const vec3 X = vec3(1,0,0);
+const vec3 Y = vec3(0,1,0);
+const vec3 Z = vec3(0,0,1);
+
+
+void center_axis(const vec3& norm, double& theta, double& phi){
+	double dTheta = acos(glm::dot(norm, Z));
+	double xproj = glm::dot(X,norm);
+	double yproj = glm::dot(Y,norm);
+	vec3 xy_plane_vec = glm::normalize(vec3(xproj,yproj,0.0));
+	double dPhi = acos(glm::dot(X, xy_plane_vec));
+	if (xy_plane_vec[1] < 0.0){
+		dPhi = -dPhi;
+	}
+	theta += dTheta;
+	phi += dPhi;
+}
+
+vec3 cos_weighted_hem(vec3& norm){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
 	
@@ -48,27 +66,10 @@ vec3 randHem(vec3& norm){
 	if (theta < EPSILON) {
 		return norm;
 	}
-	if (1.0-norm[2] < EPSILON){
-		return vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
-	}
 	
-	const vec3 X = vec3(1,0,0);
-	const vec3 Y = vec3(0,1,0);
-	const vec3 Z = vec3(0,0,1);
-	
-	
-	double dTheta = acos(glm::dot(norm, Z));
-	vec3 xproj = glm::dot(X, norm) * X;
-	vec3 yproj = glm::dot(Y,norm) * Y;
-	vec3 xy_plane_vec = glm::normalize(xproj+yproj);
-	double dPhi = acos(glm::dot(X, xy_plane_vec));
-	if (xy_plane_vec[1] < 0.0){
-		dPhi = -dPhi;
-	}
-	
-	theta += dTheta;
-	phi += dPhi;
-
+	if (1.0-norm[2] > EPSILON) {
+		center_axis(norm, theta, phi);
+	}	
 	return vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));	
 }
 
@@ -87,7 +88,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 		return hit.primative->emission;
 	}
 	
-	vec3 newDirection = randHem(normal);
+	vec3 newDirection = cos_weighted_hem(normal);
 	Ray newRay(hit.point+EPSILON*normal, newDirection);
 	return hit.primative->diffuse * findColor(scene, newRay, depth-1);
 	
