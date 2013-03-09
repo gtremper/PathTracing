@@ -78,7 +78,9 @@ vec3 specular_weighted_hem(vec3& reflection, double n){
 	double u2 = ((double)rand()/(double)RAND_MAX);
 	
 	double alpha = acos( pow( u1, 1.0 / (n + 1.0) ) );
-	double phi = 2.0 * 
+	double phi = 2.0 * M_PI * u2;
+	
+	return vec3(1,1,1);
 }
 
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
