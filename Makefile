@@ -15,7 +15,7 @@ else
 endif
 
 #Libraries
-CCOPTS = -c -I./headers/ -I./glm-0.9.3.2 -fopenmp -I./eigen -I./GL $(CFLAGS)
+CCOPTS = -c -I./headers/ -I./glm-0.9.4.2 -fopenmp -I./eigen -I./GL $(CFLAGS)
 LDOPTS = -L./lib/mac -lfreeimage -fopenmp $(LDFLAGS) 
 
 #Final Files and Intermediate .o Files
