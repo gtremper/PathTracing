@@ -73,6 +73,14 @@ vec3 cos_weighted_hem(vec3& norm){
 	return vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));	
 }
 
+vec3 specular_weighted_hem(vec3& reflection, double n){
+	double u1 = ((double)rand()/(double)RAND_MAX);
+	double u2 = ((double)rand()/(double)RAND_MAX);
+	
+	double alpha = acos( pow( u1, 1.0 / (n + 1.0) ) );
+	double phi = 2.0 * 
+}
+
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
 	Intersection hit = scene->KDTree->intersect(ray);

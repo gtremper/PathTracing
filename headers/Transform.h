@@ -10,6 +10,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/epsilon.hpp>
 
 // glm provides vector, matrix classes like glsl
 // Typedefs to make code more readable 
