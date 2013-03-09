@@ -71,11 +71,19 @@ vec3 cos_weighted_hem(vec3& norm){
 	if (theta < EPSILON) {
 		return norm;
 	}
-	
-	if (1.0-norm[2] > EPSILON) {
-		center_axis(norm, theta, phi);
-	}	
-	return vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));	
+
+    vec3 direction = vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
+
+    /* Return direction rotated so its with respect to norm */
+    return mat3(center_axis(direction)) * direction;
+
+
+
+
+	//if (1.0-norm[2] > EPSILON) {
+	//	center_axis(norm, theta, phi);
+	//}
+	//return vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
 }
 
 vec3 specular_weighted_hem(vec3& reflection, double n){
@@ -88,14 +96,18 @@ vec3 specular_weighted_hem(vec3& reflection, double n){
 	if (alpha < EPSILON) {
 		return reflection;
 	}
-	
-	if (alpha > M_PI/2.0) alpha = M_PI/2.0;
-	
-	if (1.0 - reflection[2] > EPSILON) {
-		center_axis(reflection, alpha, phi);
-	}
-	
-	return vec3(cos(phi)*sin(alpha), sin(phi)*sin(alpha), cos(alpha));	
+	vec3 direction = vec3(cos(phi)*sin(alpha), sin(phi)*sin(alpha), cos(alpha));
+
+    /* return direction rotated so its with respecto to reflection */
+    return mat3(center_axis(direction)) * direction;
+
+	//if (alpha > M_PI/2.0) alpha = M_PI/2.0;
+	//
+	//if (1.0 - reflection[2] > EPSILON) {
+	//	center_axis(reflection, alpha, phi);
+	//}
+
+	//return vec3(cos(phi)*sin(alpha), sin(phi)*sin(alpha), cos(alpha));
 }
 
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
