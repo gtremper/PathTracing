@@ -44,21 +44,12 @@ const vec3 Z = vec3(0,0,1);
 
 
 /** rotate the Z vector in the direction of norm */
-mat4 center_axis(const vec3& norm){
-    mat4 rotation = mat4(1.0);
-    /** rotate in the direction of norm */
-    /** rotate in the direction of phi, assuming phi=0 in direction of X*/
-    vec3 projected = glm::normalize(vec3(norm[0],norm[1],0));
-    /** if we have a negative Y component, our phi is switched, so we negate it */
-    double old_phi = acos(glm::dot(X, projected));
-    double phi_angle = norm[1] > 0 ? old_phi : -old_phi;
-    rotation = glm::rotate(rotation, phi_angle, Z);
-    double theta_angle = acos(glm::dot(Z, norm));
-    rotation = glm::rotate(rotation, theta_angle, Y);
-    cout << norm[0] << " " << norm[1] << " " << norm[2] << endl;
-    vec3 tmp = mat3(rotation) * norm;
-    cout << tmp[0] << " " << tmp[1] << " " << tmp[2] << endl << endl;;
-    return rotation;
+mat3 center_axis(const vec3& norm){
+	vec3 perp = glm::cross(Z,norm);
+	double angle = acos(glm::dot(Z,norm));
+	mat4 rotation = glm::rotate(mat4(1.0), angle, perp);
+	
+	return mat3(rotation);
 }
 
 vec3 cos_weighted_hem(vec3& norm){
@@ -75,7 +66,7 @@ vec3 cos_weighted_hem(vec3& norm){
     vec3 direction = vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
 
     /* Return direction rotated so its with respect to norm */
-    return mat3(center_axis(direction)) * direction;
+    return center_axis(direction) * direction;
 }
 
 vec3 specular_weighted_hem(vec3& reflection, double n){
@@ -91,7 +82,7 @@ vec3 specular_weighted_hem(vec3& reflection, double n){
 	vec3 direction = vec3(cos(phi)*sin(alpha), sin(phi)*sin(alpha), cos(alpha));
 
     /* return direction rotated so its with respecto to reflection */
-    return mat3(center_axis(direction)) * direction;
+    return center_axis(direction) * direction;
 }
 
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
@@ -140,7 +131,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
 /* ouputs bitmap to global variable*/
 void raytrace(double rayscast) {
-	double subdivisions = 2;
+	double subdivisions = 4;
 	double subdivide = 1/subdivisions;
 
 	double old_weight = rayscast/(rayscast+1.0);
