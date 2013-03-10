@@ -27,7 +27,7 @@ class Scene {
 		double indexofrefraction;
 		double refractivity;
 		
-		int antialias;
+		double antialias;
 		int shadowrays;
 		double lightradius;
 		

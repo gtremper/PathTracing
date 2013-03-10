@@ -28,7 +28,7 @@ vertex +1 +1 0
 pushTransform
 	translate 0 0 -3
 	rotate 0 1 0 -50
-	scale 10 10 1
+	scale 2 1 1
 	emission 1 1 1
 	tri 2 1 0
 	tri 3 2 0

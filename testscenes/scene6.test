@@ -81,7 +81,9 @@ rotate 1 0 0 60
 translate 0 0 -1
 scale 10 10 1
 diffuse 1 1 1
+emission 1 1 1
 tri 0 1 2
+emission 0 0 0
 tri 0 2 3
 popTransform
 
