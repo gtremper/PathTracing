@@ -76,14 +76,6 @@ vec3 cos_weighted_hem(vec3& norm){
 
     /* Return direction rotated so its with respect to norm */
     return mat3(center_axis(direction)) * direction;
-
-
-
-
-	//if (1.0-norm[2] > EPSILON) {
-	//	center_axis(norm, theta, phi);
-	//}
-	//return vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
 }
 
 vec3 specular_weighted_hem(vec3& reflection, double n){
@@ -100,14 +92,6 @@ vec3 specular_weighted_hem(vec3& reflection, double n){
 
     /* return direction rotated so its with respecto to reflection */
     return mat3(center_axis(direction)) * direction;
-
-	//if (alpha > M_PI/2.0) alpha = M_PI/2.0;
-	//
-	//if (1.0 - reflection[2] > EPSILON) {
-	//	center_axis(reflection, alpha, phi);
-	//}
-
-	//return vec3(cos(phi)*sin(alpha), sin(phi)*sin(alpha), cos(alpha));
 }
 
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
@@ -152,56 +136,11 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 		multiplier *= 1.0/(1.0-threshold);
 		return multiplier * hit.primative->specular * findColor(scene, newRay, depth-1);
 	}
-
-
-
-
-
-
-
-
-
-
-
-	//double c1 = -glm::dot(normal, ray.direction);
-
-	//vector<Light*>::iterator light = scene->lights.begin();
-	//for(; light!=scene->lights.end(); ++light){
-	//	color += (*light)->shade(hit, scene->KDTree, normal);
-	//}
-
-	//Ray reflectedRay = Ray(hit.point+EPSILON*normal, ray.direction+(2.0*normal*c1));
-
-	//if(depth != 1) {
-		//color += hit.primative->specular * findColor(scene, reflectedRay, depth-1);
-		/*
-		if(hit.primative->refractivity) {
-			double n;
-			if(c1 > 0.0) {
-				n = 1.003f/hit.primative->indexofrefraction; // 1.009 is the refractive index of a vacuum
-			} else {
-				n = hit.primative->indexofrefraction/1.003f;
-			}
-
-			double c2 = sqrt(1 - n*n * (1 - c1*c1));
-			Ray refractedRay = Ray(hit.point, glm::normalize((n*ray.direction) + (n*c1-c2)*normal));
-			if(c1>0.0){
-				refractedRay.origin -= EPSILON*normal;
-			} else {
-				refractedRay.direction = -refractedRay.direction;
-				refractedRay.origin += EPSILON*normal;
-			}
-			color += hit.primative->refractivity * findColor(scene, refractedRay, depth-1);
-		}
-		*/
-	//}
-	//return color;
 }
 
 /* ouputs bitmap to global variable*/
 void raytrace(double rayscast) {
-
-	double subdivisions = 4;
+	double subdivisions = 2;
 	double subdivide = 1/subdivisions;
 
 	double old_weight = rayscast/(rayscast+1.0);
@@ -254,6 +193,12 @@ void keyboard(unsigned char key, int x, int y) {
 			ss << scene->filename<<"_"<< int(rays_cast) << ".png";
 			FreeImage_Save(FIF_PNG, bitmap, ss.str().c_str(), 0);
 			cout << "Image saved!" << endl;
+			break;
+		case 'f':
+			update = 10000;
+			break;
+		case 'h':
+			update = 0;
 			break;
 		case 'r':
 			glutReshapeWindow(scene->width,scene->height);
@@ -308,6 +253,7 @@ void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	if (update){
+		cout << "Iterations left: " << update << endl;
 		time_t seconds = time(NULL);
 		raytrace(rays_cast);
 		BYTE* bits = FreeImage_GetBits(bitmap);
