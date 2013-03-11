@@ -113,7 +113,20 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	/*********************************************
 	Direct lighting should go here eventually
 	*********************************************/
-	
+
+    vec3 direct_lighting_color = vec3(0,0,0);
+    if (depth == scene->maxdepth - 1) {
+        for (unsigned int i = 0; i < scene->lights.size(); i++) {
+           vec3 ray_to_light = glm::normalize(scene->lights[i]->aabb.center - hit.point);
+           double raw_cosangle = glm::dot(normal, ray_to_light);
+           double cosangle = raw_cosangle > 0 ? raw_cosangle : -raw_cosangle;
+           direct_lighting_color += (1.0 / scene->lights.size()) *
+                                    cosangle *
+                                    scene->lights[i]->emission / (1.0 * M_PI);
+//           cout << direct_lighting_color[0] << " " << direct_lighting_color[1] << " " << direct_lighting_color[2] << endl;
+        }
+    }
+
 	//This is a vector of all the objects with emission
 	//scene->lights;
 
@@ -130,13 +143,13 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	double specWeight = glm::length(hit.primative->specular);
 	double threshold = diffWeight / (diffWeight + specWeight);
 	double u1 = ((double)rand()/(double)RAND_MAX);
-	
+
 	/* Importance sample on macro level to choose diffuse or specular */
 	if (u1 < threshold) {
 		vec3 newDirection = cos_weighted_hem(normal);
 		Ray newRay(hit.point+EPSILON*normal, newDirection);
 		double prob = 1.0/threshold;
-		return prob * hit.primative->diffuse * findColor(scene, newRay, depth-1);
+		return prob * hit.primative->diffuse * findColor(scene, newRay, depth-1) + direct_lighting_color;
 	} else {
 		vec3 reflect = glm::reflect(ray.direction, normal);
 		vec3 newDirection = specular_weighted_hem(reflect, hit.primative->shininess);
