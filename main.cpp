@@ -114,6 +114,9 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	Direct lighting should go here eventually
 	*********************************************/
 
+    //TODO: account for possible occlusion
+    //TODO: scale contribution by ratio of projection of light onto hemisphere to
+    //      area of hemisphere
     vec3 direct_lighting_color = vec3(0,0,0);
     if (depth == scene->maxdepth - 1) {
         for (unsigned int i = 0; i < scene->lights.size(); i++) {
