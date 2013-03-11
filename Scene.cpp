@@ -21,7 +21,6 @@ using namespace std;
 Scene::Scene(char* file) {
 	filename = "OUTPUT";
 	maxdepth = 5; 
-	ambient = vec3(0.2,0.2,0.2);
 	diffuse = vec3(0,0,0);
 	specular = vec3(0,0,0);
 	shininess = 0;
@@ -31,10 +30,8 @@ Scene::Scene(char* file) {
 	antialias = 2;
 	shadowrays = 1;
 	lightradius = 0;
+	isLight = false;
 	
-	constant = 1;
-	linear = 0;
-	quadratic = 0;
 	vec3 maxvec = vec3(DBL_MAX,DBL_MAX,DBL_MAX);
 	vec3 minvec = vec3(DBL_MIN,DBL_MIN,DBL_MIN);
 	sceneAABB = AABB(maxvec, minvec);
@@ -48,10 +45,6 @@ Scene::~Scene() {
 	vector<Shape*>::iterator it;
 	for(it=objects.begin(); it!=objects.end(); it++){
 		delete *it;
-	}
-	vector<Light*>::iterator l;
-	for(l=lights.begin(); l!=lights.end(); l++){
-		delete *l;
 	}
 }
  
@@ -111,9 +104,9 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		vec3 up = vec3(arg1,arg2,arg3);
 		setCoordinateFrame(lookat,up);
 		line >> fovy;
-		fovy*=pi/180.0;
-		double d = height/(2.0 * tan(fovy*0.5));
-		fovx = 2. * atan(width/(2.0*d));
+		fovy *= pi / 180.0;
+		double d = height / (2.0 * tan( fovy * 0.5 ) );
+		fovx = 2.0 * atan( width / (2.0 * d) );
 	} else if (cmd == "sphere") {
 		double arg1, arg2, arg3, arg4;
 		line >> arg1;
@@ -130,15 +123,17 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		sceneAABB.aabbmax[1] = max(s->aabb.aabbmax[1],sceneAABB.aabbmax[1]);
 		sceneAABB.aabbmin[2] = min(s->aabb.aabbmin[2],sceneAABB.aabbmin[2]);
 		sceneAABB.aabbmax[2] = max(s->aabb.aabbmax[2],sceneAABB.aabbmax[2]);
-		s->ambient = ambient;
+		//s->ambient = ambient;
 		s->diffuse = diffuse;
 		s->specular = specular;
 		s->shininess = shininess;
 		s->emission = emission;	
-		s->emission = emission;
 		s->indexofrefraction = indexofrefraction;
 		s->refractivity = refractivity;
 		objects.push_back(s);
+		if (isLight){
+			lights.push_back(s);
+		}
 	} else if (cmd == "maxverts") {
 		int maxverts;
 		line >> maxverts;
@@ -178,7 +173,7 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		updateAABB(v1);
 		updateAABB(v2);
 		updateAABB(v3);
-		t->ambient = ambient;
+		//t->ambient = ambient;
 		t->diffuse = diffuse;
 		t->specular = specular;
 		t->shininess = shininess;
@@ -186,6 +181,9 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		t->indexofrefraction = indexofrefraction;
 		t->refractivity = refractivity;
 		objects.push_back(t);
+		if (isLight){
+			lights.push_back(t);
+		}
 	} else if(cmd == "trinormal") {
 		int a1,a2,a3;
 		line >> a1 >> a2 >> a3;
@@ -198,7 +196,7 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		vec3 n2 = vec3(top * vec4(norms[a2],0));
 		vec3 n3 = vec3(top * vec4(norms[a3],0));
 		NormTriangle* t = new NormTriangle(v1,v2,v3,n1,n2,n3);
-		t->ambient = ambient;
+		//t->ambient = ambient;
 		t->diffuse = diffuse;
 		t->specular = specular;
 		t->shininess = shininess;
@@ -206,6 +204,9 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		t->indexofrefraction = indexofrefraction;
 		t->refractivity = refractivity;
 		objects.push_back(t);
+		if (isLight){
+			lights.push_back(t);
+		}
 	} else if(cmd == "translate") {
 		double arg1,arg2,arg3;
 		line >> arg1;
@@ -229,26 +230,6 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		mv.push(mv.top());
 	} else if (cmd == "popTransform"){
 		mv.pop();
-	} else if (cmd == "directional") {
-		double x,y,z,r,g,b;
-		line >> x >> y >> z >> r >> g >> b;
-		vec3 dir = vec3(mv.top()*vec4(x,y,z,0.0));
-		DirectionalLight* light = new DirectionalLight(vec3(r,g,b),dir);
-		lights.push_back(light);
-	} else if (cmd == "point") {
-		double x,y,z,r,g,b;
-		line >> x >> y >> z >> r >> g >> b;
-		vec3 point = vec3(mv.top()*vec4(x,y,z,1.0f));
-		PointLight* light = new PointLight(vec3(r,g,b),vec3(x,y,z),constant,linear,quadratic);
-		light->shadowrays = shadowrays;
-		light->lightradius = lightradius;
-		lights.push_back(light);
-	} else if (cmd == "attenuation") {
-		line >> constant >> linear >> quadratic;
-	} else if (cmd == "ambient") {
-		double arg1, arg2, arg3;
-		line >> arg1 >> arg2 >> arg3;
-		ambient = vec3(arg1,arg2,arg3);
 	} else if (cmd == "diffuse") {
 		double arg1, arg2, arg3;
 		line >> arg1 >> arg2 >> arg3;
@@ -263,16 +244,17 @@ void Scene::parseLine(string l, stack<mat4>& mv, vector<vec3>& verts,
 		double arg1, arg2, arg3;
 		line >> arg1 >> arg2 >> arg3;
 		emission = vec3(arg1,arg2,arg3);
+		if (arg1 || arg2 || arg3){
+			isLight = true;
+		} else {
+			isLight = false;
+		}
 	} else if (cmd == "indexofrefraction") {
 		line >> indexofrefraction;
 	} else if (cmd == "refractivity") {
 		line >> refractivity;
 	} else if (cmd == "antialias") {
 		line >> antialias;
-	} else if (cmd == "shadowrays") {
-		line >> shadowrays;
-	} else if (cmd == "lightradius") {
-		line >> lightradius;
 	}
 	//cout << cmd << endl;
 }

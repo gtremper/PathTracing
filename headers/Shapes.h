@@ -25,7 +25,7 @@ class Shape {
 		bool hasTexture;
 		
 		/* material properties */
-		vec3 ambient;
+		//vec3 ambient;
 		vec3 diffuse;
 		vec3 specular;
 		double shininess;
@@ -39,7 +39,6 @@ class Sphere : public Shape {
 		Sphere(mat4);
 		double intersect(Ray&);
 		vec3 getNormal(vec3&);
-	
 		mat4 mv;
 		mat4 inv;	
 };

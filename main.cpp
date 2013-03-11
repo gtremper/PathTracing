@@ -52,6 +52,7 @@ mat3 center_axis(const vec3& norm){
 	return mat3(rotation);
 }
 
+/* Sample a hemisphere for diffuse ray */
 vec3 cos_weighted_hem(vec3& norm){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
@@ -69,6 +70,7 @@ vec3 cos_weighted_hem(vec3& norm){
     return center_axis(direction) * direction;
 }
 
+/* Sample a hemispehre for specular ray */
 vec3 specular_weighted_hem(vec3& reflection, double n){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
@@ -85,26 +87,51 @@ vec3 specular_weighted_hem(vec3& reflection, double n){
     return center_axis(direction) * direction;
 }
 
+/* Shoot ray at scene */
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
-
+	
+	/*********************************************
+	Initial scene intersection and termination logic
+	*********************************************/ 
+	
+	/* Intersect scene */
 	Intersection hit = scene->KDTree->intersect(ray);
 
+
+	// Should eventually replace this with russian roulette
 	if(!hit.primative || depth==1) {
 		return vec3(0,0,0); //background color
 	}
-
-	vec3 normal = hit.primative->getNormal(hit.point);
-
 	/* Tempararily return if hit light */
+	// Maybe should weight this with specular and diffuse
 	if( glm::length(hit.primative->emission) > EPSILON ){
 		return hit.primative->emission;
 	}
+	
+	vec3 normal = hit.primative->getNormal(hit.point);
+	
+	/*********************************************
+	Direct lighting should go here eventually
+	*********************************************/
+	
+	//This is a vector of all the objects with emission
+	//scene->lights;
 
+	//Will want to sample lights be distance away or something
+	//Doesn't matter for case with 1 light, so we should just 
+	//do that first. You can get the center of the object with
+	//object->aabb.center
+
+
+	/*********************************************
+	Importance sample global illumination
+	*********************************************/
 	double diffWeight = glm::length(hit.primative->diffuse);
 	double specWeight = glm::length(hit.primative->specular);
 	double threshold = diffWeight / (diffWeight + specWeight);
-
 	double u1 = ((double)rand()/(double)RAND_MAX);
+	
+	/* Importance sample on macro level to choose diffuse or specular */
 	if (u1 < threshold) {
 		vec3 newDirection = cos_weighted_hem(normal);
 		Ray newRay(hit.point+EPSILON*normal, newDirection);
@@ -129,9 +156,10 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	}
 }
 
+/* Main raytracing function. Shoots ray for each pixel with anialiasing */
 /* ouputs bitmap to global variable*/
 void raytrace(double rayscast) {
-	double subdivisions = 4;
+	double subdivisions = scene->antialias;
 	double subdivide = 1/subdivisions;
 
 	double old_weight = rayscast/(rayscast+1.0);
@@ -151,8 +179,7 @@ void raytrace(double rayscast) {
 					double randomNum1 = ((double)rand()/(double)RAND_MAX) * subdivide;
 					double randomNum2 = ((double)rand()/(double)RAND_MAX) * subdivide;
 					Ray ray = scene->castEyeRay(i+(a*subdivide) + randomNum1,j+(b*subdivide)+randomNum2);
-					//color += findColor(scene, ray, scene->maxdepth);
-					color += findColor(scene, ray, 100);
+					color += findColor(scene, ray, scene->maxdepth);
 				}
 			}
 			color *= (subdivide * subdivide);
@@ -166,6 +193,8 @@ void raytrace(double rayscast) {
 		}
 	}
 }
+
+/* Everything below here is openGL boilerplate */
 
 void reshape(int w, int h){
 	width = w;

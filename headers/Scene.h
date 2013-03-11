@@ -19,7 +19,6 @@ class Scene {
 		AABB sceneAABB;
 		TreeNode* KDTree;
 		
-		vec3 ambient;
 		vec3 diffuse;
 		vec3 specular;
 		double shininess;
@@ -31,10 +30,8 @@ class Scene {
 		int shadowrays;
 		double lightradius;
 		
-		std::vector<Light*> lights;
-		double constant;
-		double linear;
-		double quadratic;
+		std::vector<Shape*> lights;
+		bool isLight;
 		
 		Scene(char*);
 		~Scene();
