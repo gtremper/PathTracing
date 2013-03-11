@@ -48,7 +48,7 @@ mat3 center_axis(const vec3& norm){
 	vec3 perp = glm::cross(Z,norm);
 	double angle = acos(glm::dot(Z,norm));
 	mat4 rotation = glm::rotate(mat4(1.0), angle, perp);
-	
+
 	return mat3(rotation);
 }
 
@@ -89,11 +89,11 @@ vec3 specular_weighted_hem(vec3& reflection, double n){
 
 /* Shoot ray at scene */
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
-	
+
 	/*********************************************
 	Initial scene intersection and termination logic
-	*********************************************/ 
-	
+	*********************************************/
+
 	/* Intersect scene */
 	Intersection hit = scene->KDTree->intersect(ray);
 
@@ -107,9 +107,9 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	if( glm::length(hit.primative->emission) > EPSILON ){
 		return hit.primative->emission;
 	}
-	
+
 	vec3 normal = hit.primative->getNormal(hit.point);
-	
+
 	/*********************************************
 	Direct lighting should go here eventually
 	*********************************************/
@@ -131,7 +131,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	//scene->lights;
 
 	//Will want to sample lights be distance away or something
-	//Doesn't matter for case with 1 light, so we should just 
+	//Doesn't matter for case with 1 light, so we should just
 	//do that first. You can get the center of the object with
 	//object->aabb.center
 
@@ -177,7 +177,7 @@ void raytrace(double rayscast) {
 
 	double old_weight = rayscast/(rayscast+1.0);
 	double new_weight = 1.0 - old_weight;
-	
+
 	#pragma omp parallel for
 	for (int j=0; j<scene->height; j++){
 		int tid = omp_get_thread_num();
