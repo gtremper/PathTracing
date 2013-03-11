@@ -44,7 +44,8 @@ tri 9  10 8
 tri 11 8 10
 
 # green diffuse value
-diffuse 0.15 0.48 0.09
+diffuse 0 1 0
+#diffuse 0.15 0.48 0.09
 #specular 0.15 0.48 0.09
 # right wall
 vertex 0.0   0.0 559.2
@@ -55,7 +56,8 @@ tri 12 13 14
 tri 12 14 15
 
 # red diffuse value
-diffuse 0.63 0.06 0.04
+diffuse 1 0 0
+#diffuse 0.63 0.06 0.04
 #specular 0.63 0.06 0.04
 # left wall
 vertex 552.8   0.0 0.0
@@ -66,7 +68,8 @@ tri 16 17 18
 tri 16 18 19
 
 # off-white diffuse value
-diffuse 0.76 0.75 0.5
+diffuse .8 .8 .8
+#diffuse 0.76 0.75 0.5
 #specular 0.76 0.75 0.5
 # short block
 vertex 130.0 165.0  65.0
@@ -143,10 +146,10 @@ tri 56 58 59
 emission 1 1 1
 #light!
 
-vertex 348 540 200
-vertex 348 540 340
-vertex 208 540 340
-vertex 208 540 200
+vertex 368 548 180
+vertex 368 548 360
+vertex 188 548 360
+vertex 188 548 180
 tri 60 61 62
 tri 60 62 63
 
