@@ -42,7 +42,6 @@ const vec3 X = vec3(1,0,0);
 const vec3 Y = vec3(0,1,0);
 const vec3 Z = vec3(0,0,1);
 
-
 /** rotate the Z vector in the direction of norm */
 mat3 center_axis(const vec3& norm){
 	vec3 perp = glm::cross(Z,norm);
@@ -96,6 +95,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
 	/* Intersect scene */
 	Intersection hit = scene->KDTree->intersect(ray);
+	
 
 
 	// Should eventually replace this with russian roulette
@@ -117,6 +117,8 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
     //TODO: account for possible occlusion
     //TODO: scale contribution by ratio of projection of light onto hemisphere to
     //      area of hemisphere
+	//triangles now have method getSubtendedAngle(vec3) which gets subtended solid
+	//angle from input point.
     vec3 direct_lighting_color = vec3(0,0,0);
     if (depth == scene->maxdepth - 1) {
         for (unsigned int i = 0; i < scene->lights.size(); i++) {

@@ -75,6 +75,28 @@ double Triangle::intersect(Ray& ray){
 vec3 Triangle::getNormal(vec3& hit){
 	return n0;
 }
+
+
+double Triangle::getSubtendedAngle(const vec3& origin) {
+	vec3 a = p0 - origin;
+	vec3 b = p1 - origin;
+	vec3 c = p2 - origin;
+	
+	double det = glm::determinant( mat3(a,b,c) );
+	
+	double a1 = glm::length(a);
+	double b1 = glm::length(b);
+	double c1 = glm::length(c);
+	
+	double result = a1*b1*c1 + glm::dot(a,b)*c1 + 
+				glm::dot(a,c)*b1 + glm::dot(b,c)*a1;
+					
+	result = atan2(det, result);
+	if (result < 0.0) result += M_PI;
+	result *= 2.0;
+	return result;
+}
+
 /*
 vec3 Triangle::getTexture(vec3& hit){
 	mat2 M = mat2(p1[0]-p0[0], p1[1]-p0[1], p2[0]-p0[0], p2[1]-p0[1]);
@@ -165,6 +187,12 @@ double Sphere::intersect(Ray& ray) {
 vec3 Sphere::getNormal(vec3& hit){
 	return glm::normalize(vec3(glm::transpose(inv)*inv*vec4(hit,1.0)));
 }
+
+double Sphere::getSubtendedAngle(const vec3& origin) {
+	cout << "THIS IS NOT IMPLEMENTED" << endl;
+	exit(1);
+}
+
 
 /***  AABB  ***/
 AABB::AABB(vec3& minarg, vec3& maxarg) {

@@ -19,6 +19,7 @@ class Shape {
 	public:
 		virtual double intersect(Ray&)=0;
 		virtual vec3 getNormal(vec3&)=0;
+		virtual double getSubtendedAngle(const vec3&)=0;
 	//	virtual vec3 getTexture(vec3&){};
 		
 		AABB aabb;
@@ -39,6 +40,7 @@ class Sphere : public Shape {
 		Sphere(mat4);
 		double intersect(Ray&);
 		vec3 getNormal(vec3&);
+		double getSubtendedAngle(const vec3&);
 		mat4 mv;
 		mat4 inv;	
 };
@@ -49,6 +51,7 @@ class Triangle : public Shape {
 		Triangle(vec3,vec3,vec3);
 		double intersect(Ray&);
 		virtual vec3 getNormal(vec3&);
+		double getSubtendedAngle(const vec3&);
 	//	vec3 getTexture(vec3&);
 	
 		vec3 p0;

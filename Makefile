@@ -19,7 +19,7 @@ CCOPTS = -c -I./headers/ -I./glm-0.9.4.2 -fopenmp -I./eigen -I./GL $(CFLAGS)
 LDOPTS = -L./lib/mac -lfreeimage -fopenmp $(LDFLAGS) 
 
 #Final Files and Intermediate .o Files
-OBJECTS = main.o Scene.o Transform.o Shapes.o Light.o KDTree.o Shaders.o
+OBJECTS = main.o Scene.o Transform.o Shapes.o KDTree.o Shaders.o
 TARGET = raytracer
 
 #------------------------------------------------------
@@ -40,8 +40,8 @@ Transform.o: Transform.cpp
 Shapes.o: Shapes.cpp
 	$(CC) $(CCOPTS) Shapes.cpp
 
-Light.o: Light.cpp
-	$(CC) $(CCOPTS) Light.cpp
+#Light.o: Light.cpp
+#	$(CC) $(CCOPTS) Light.cpp
 
 KDTree.o: KDTree.cpp
 	$(CC) $(CCOPTS) KDTree.cpp
