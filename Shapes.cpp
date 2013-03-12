@@ -4,6 +4,7 @@
 
 #include "Shapes.h"
 #include "Intersection.h"
+#include "KDTree.h"
 
 #define EPSILON 0.000001
 
@@ -98,6 +99,54 @@ double Triangle::getSubtendedAngle(const vec3& origin) {
 }
 
 /*
+hit is the point hit on the triangle
+light is the light you want to shade with
+tree is the KDtree
+num_samples is the root of the number
+*/
+vec3 Triangle::shade(Intersection& hit, Shape* light, 
+						TreeNode* tree,double num_samples){
+	double subdivide = 1.0 / num_samples;
+	double numHits = 0.0;
+	vec3 thisNormal = getNormal(hit.point);
+	for(double a=0; a<num_samples; a+=1) {
+		for(double b=0; b<num_samples; b+=1) {
+			//calculate statified random point on triangle
+			double rand1 = ((double)rand()/(double)RAND_MAX) * subdivide;
+			double rand2 = ((double)rand()/(double)RAND_MAX) * subdivide;
+			vec3 dir = p0;
+			dir += (a*subdivide + rand1) * (p1-p0);
+			dir += (b*subdivide + rand2) * (p2-p0);
+			dir = glm::normalize(dir - hit.point);
+			Ray ray = Ray(hit.point + EPSILON * thisNormal, dir);
+			Intersection light_hit = tree->intersect(ray);
+			if (light_hit.primative == this) {
+				numHits += 1.0;
+			}
+		}
+	}
+	
+	vec3 lightNormal = light->getNormal(aabb.center);
+	
+	vec3 direction = glm::normalize(this->aabb.center - hit.point);
+	vec3 shade = max(0.0,glm::dot(thisNormal,direction)) * diffuse;
+
+	vec3 half = glm::normalize(hit.sourceDirection+direction);
+	double phong = pow( max(0.0,glm::dot(half,thisNormal)) , shininess);
+	shade += phong * specular;
+	shade *= light->emission;
+	
+	double dist = glm::distance(hit.point, this->aabb.center);
+	dist *= dist; // square distance
+	double cos_weight = glm::dot(thisNormal,direction);
+	cos_weight *= glm::dot(lightNormal, -direction);
+	cos_weight /= dist;
+	
+	double frac = numHits * subdivide*subdivide; //fraction shadow rays hit
+	return frac * cos_weight * shade;
+}
+
+/*
 vec3 Triangle::getTexture(vec3& hit){
 	mat2 M = mat2(p1[0]-p0[0], p1[1]-p0[1], p2[0]-p0[0], p2[1]-p0[1]);
 	double det = glm::determinant(M);
@@ -189,6 +238,12 @@ vec3 Sphere::getNormal(vec3& hit){
 }
 
 double Sphere::getSubtendedAngle(const vec3& origin) {
+	cout << "THIS IS NOT IMPLEMENTED" << endl;
+	exit(1);
+}
+
+vec3 Sphere::shade(Intersection& hit, Shape* light, 
+						TreeNode* tree,double num_samples){
 	cout << "THIS IS NOT IMPLEMENTED" << endl;
 	exit(1);
 }

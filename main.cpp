@@ -123,8 +123,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
     if (depth == scene->maxdepth - 1) {
         for (unsigned int i = 0; i < scene->lights.size(); i++) {
            vec3 ray_to_light = glm::normalize(scene->lights[i]->aabb.center - hit.point);
-           double raw_cosangle = glm::dot(normal, ray_to_light);
-           double cosangle = abs(raw_cosangle);
+           double cosangle = abs( glm::dot(normal, ray_to_light) );
            direct_lighting_color += (1.0 / scene->lights.size()) *
                                     cosangle *
                                     scene->lights[i]->emission / (1.0 * M_PI);
