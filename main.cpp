@@ -115,9 +115,13 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	*********************************************/
 
     vec3 direct_lighting_color = vec3(0,0,0);
+    int num_shadow_rays = max(1.0, 10.0 / (depth / scene->maxdepth));
+    double light_angle = 0.0;
     for (unsigned int i = 0; i < scene->lights.size(); i++) {
-      direct_lighting_color += scene->lights[i]->shade(hit,scene->KDTree,2);
+      light_angle += scene->lights[i]->getSubtendedAngle(hit.point);
+      direct_lighting_color += scene->lights[i]->shade(hit,scene->KDTree,num_shadow_rays);
     }
+    direct_lighting_color *= M_PI;
 
 	/*********************************************
 	Importance sample global illumination
@@ -127,12 +131,14 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	double threshold = diffWeight / (diffWeight + specWeight);
 	double u1 = ((double)rand()/(double)RAND_MAX);
 
+    light_angle = (1.0 - (light_angle / (2 * M_PI)));
+    vec3 color = direct_lighting_color;
 	/* Importance sample on macro level to choose diffuse or specular */
 	if (u1 < threshold) {
 		vec3 newDirection = cos_weighted_hem(normal);
 		Ray newRay(hit.point+EPSILON*normal, newDirection);
 		double prob = 1.0/threshold;
-		return prob * hit.primative->diffuse * findColor(scene, newRay, depth-1) + direct_lighting_color;
+		color += light_angle * prob * hit.primative->diffuse * findColor(scene, newRay, depth-1);
 	} else {
 		vec3 reflect = glm::reflect(ray.direction, normal);
 		vec3 newDirection = specular_weighted_hem(reflect, hit.primative->shininess);
@@ -148,8 +154,9 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
 		double multiplier = phong / prob;
 		multiplier *= 1.0/(1.0-threshold);
-		return multiplier * hit.primative->specular * max(0.0,glm::dot(normal, newDirection)) * findColor(scene, newRay, depth-1) + direct_lighting_color;
+		color += light_angle * multiplier * hit.primative->specular * max(0.0,glm::dot(normal, newDirection)) * findColor(scene, newRay, depth-1);
 	}
+    return color;
 }
 
 /* Main raytracing function. Shoots ray for each pixel with anialiasing */
