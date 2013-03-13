@@ -4,6 +4,8 @@
 
 size 720 720
 output cornell_box.png
+maxdepth 5
+antialias 4
 
 camera 278 273 -800 278 273 -799 0 1 0 40
 

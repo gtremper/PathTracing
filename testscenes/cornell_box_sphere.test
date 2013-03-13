@@ -2,8 +2,10 @@
 # based on original cornell box data from:
 # http://www.graphics.cornell.edu/online/box/data.html
 
-size 720 720
+size 480 480
 output cornell_box.png
+maxdepth 3
+antialias 4
 
 camera 278 273 -800 278 273 -799 0 1 0 40
 
