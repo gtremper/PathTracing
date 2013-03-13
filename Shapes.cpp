@@ -94,9 +94,9 @@ double Triangle::getSubtendedAngle(const vec3& origin) {
 				glm::dot(a,c)*b1 + glm::dot(b,c)*a1;
 					
 	result = atan2(det, result);
-	if (result < 0.0) result += M_PI;
+	//if (result < 0.0) result += M_PI;
 	result *= 2.0;
-	return result;
+	return abs(result);
 }
 
 /*
