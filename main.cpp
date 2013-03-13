@@ -169,7 +169,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
 		double multiplier = phong / prob;
 		multiplier *= 1.0/(1.0-threshold);
-		return multiplier * hit.primative->specular * findColor(scene, newRay, depth-1);
+		return multiplier * hit.primative->specular * max(0.0,glm::dot(normal, newDirection)) * findColor(scene, newRay, depth-1) + direct_lighting_color;
 	}
 }
 
