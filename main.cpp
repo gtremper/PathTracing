@@ -95,7 +95,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
 	/* Intersect scene */
 	Intersection hit = scene->KDTree->intersect(ray);
-	
+
 
 
 	// Should eventually replace this with russian roulette
@@ -111,7 +111,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	vec3 normal = hit.primative->getNormal(hit.point);
 
 	/*********************************************
-	Direct lighting should go here eventually
+	Direct lighting
 	*********************************************/
 
     //TODO: account for possible occlusion
