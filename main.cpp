@@ -114,31 +114,10 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	Direct lighting
 	*********************************************/
 
-    //TODO: account for possible occlusion
-    //TODO: scale contribution by ratio of projection of light onto hemisphere to
-    //      area of hemisphere
-	//triangles now have method getSubtendedAngle(vec3) which gets subtended solid
-	//angle from input point.
     vec3 direct_lighting_color = vec3(0,0,0);
-    if (depth == scene->maxdepth - 1) {
-        for (unsigned int i = 0; i < scene->lights.size(); i++) {
-           vec3 ray_to_light = glm::normalize(scene->lights[i]->aabb.center - hit.point);
-           double cosangle = abs( glm::dot(normal, ray_to_light) );
-           direct_lighting_color += (1.0 / scene->lights.size()) *
-                                    cosangle *
-                                    scene->lights[i]->emission / (1.0 * M_PI);
-//           cout << direct_lighting_color[0] << " " << direct_lighting_color[1] << " " << direct_lighting_color[2] << endl;
-        }
+    for (unsigned int i = 0; i < scene->lights.size(); i++) {
+      direct_lighting_color += scene->lights[i]->shade(hit,scene->KDTree,2);
     }
-
-	//This is a vector of all the objects with emission
-	//scene->lights;
-
-	//Will want to sample lights be distance away or something
-	//Doesn't matter for case with 1 light, so we should just
-	//do that first. You can get the center of the object with
-	//object->aabb.center
-
 
 	/*********************************************
 	Importance sample global illumination
