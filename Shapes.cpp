@@ -35,42 +35,6 @@ Intersection::Intersection(vector<Shape*>& objects, Ray& ray) {
 	sourceDirection = -ray.direction;
 }
 
-/*
-hit is the point hit on the triangle
-light is the light you want to shade with
-tree is the KDtree
-num_samples is the root of the number
-*/
-vec3 Shape::shade(Intersection& hit, Shape* light, 
-						TreeNode* tree, double num_samples){
-
-	vec3 thisNormal = getNormal(hit.point);
-	vec3 lightNormal = light->getNormal(aabb.center);
-	
-	/* get fraction of rays that hit light */
-	vec3 origin = hit.point + thisNormal*EPSILON;
-	double frac = light->sampleLight(origin, num_samples, tree);
-	if (frac < EPSILON) {
-		return vec3(0,0,0);
-	}
-	
-	/* Shade Point with phong model */
-	vec3 direction = glm::normalize(this->aabb.center - hit.point);
-	vec3 shade = max(0.0,glm::dot(thisNormal,direction)) * diffuse;
-	vec3 half = glm::normalize(hit.sourceDirection+direction);
-	double phong = pow( max(0.0,glm::dot(half,thisNormal)) , shininess);
-	shade += phong * specular;
-	shade *= light->emission;
-	
-	/* weigh by dA */
-	double dist = glm::distance(hit.point, light->aabb.center);
-	dist *= dist; // square distance
-	double cos_weight = glm::dot(thisNormal, direction);
-	cos_weight *= glm::dot(lightNormal, -direction);
-	cos_weight /= dist; 
-	
-	return frac * cos_weight * shade;
-}
 
 /***  TRIANGLE  ***/
 Triangle::Triangle(vec3 point0, vec3 point1, vec3 point2) {
@@ -135,29 +99,50 @@ double Triangle::getSubtendedAngle(const vec3& origin) {
 	return result;
 }
 
-double Triangle::sampleLight(vec3& origin, double num_samples, TreeNode* tree){
-	double numHits = 0.0;
-	double subdivide = 1.0 / num_samples;
-	for(double a=0; a<num_samples; a+=1) {
-		for(double b=0; b<num_samples; b+=1) {
-			//calculate statified random point on triangle
-			double rand1 = ((double)rand()/(double)RAND_MAX) * subdivide;
-			double rand2 = ((double)rand()/(double)RAND_MAX) * subdivide;
-			vec3 dir = p0;
-			dir += (a*subdivide + rand1) * (p1-p0);
-			dir += (b*subdivide + rand2) * (p2-p0);
-			dir = glm::normalize(dir - origin);
-			Ray ray = Ray(origin, dir);
-			Intersection light_hit = tree->intersect(ray);
-			if (light_hit.primative == this) {
-				numHits += 1.0;
-			}
-		}
-	}
+/*
+returns shade
+*/
+vec3 Triangle::shade(Intersection& hit, TreeNode* tree, const int num_samples) {
+	vec3 s_norm = hit.primative->getNormal(hit.point);
+	vec3 s_diffuse = hit.primative->diffuse;
+	vec3 s_specular = hit.primative->specular;
+	double s_shininess = hit.primative->shininess;
 	
-	double area = 0.5 * glm::dot(p1-p0, p2-p0); //area of triangle
-	return numHits * subdivide*subdivide * area;
+	vec3 color = vec3(0,0,0);
+	for (int i=0; i<num_samples; i+=1){
+		double u1 = double(rand()) / double(RAND_MAX);
+		double u2 = double(rand()) / double(RAND_MAX);
+		u1 = sqrt(u1);
+		vec3 light_samp = (1.0-u1)*p0 + u1*(1.0-u2)*p1 + u1*u2*p2;
+		vec3 dir = glm::normalize(light_samp - hit.point);
+		Ray ray = Ray(hit.point + EPSILON * s_norm, dir);
+		Intersection light_hit = tree->intersect(ray);
+		if (light_hit.primative != this) {
+			// is a shadow
+			continue;
+		}
+		
+		/* Calculate shading */
+		vec3 shade = max(0.0,glm::dot(s_norm, dir)) * s_diffuse;
+		vec3 half = glm::normalize(hit.sourceDirection+dir);
+		double phong = pow( max(0.0,glm::dot(half,s_norm)) , s_shininess);
+		shade += phong * s_specular;
+		shade *= this->emission;
+
+		/* weigh by dA */
+		double dist = glm::distance(hit.point, light_hit.point);
+		dist *= dist; // square distance
+		double cos_weight = glm::dot(s_norm, dir);
+		cos_weight *= glm::dot(getNormal(light_hit.point), -dir);
+		cos_weight /= dist;
+		cos_weight = 0.5 * glm::dot(p1-p0, p2-p0);
+		
+		color += cos_weight * shade;
+	}
+	color /= double(num_samples);
+	return color;
 }
+
 
 /*
 vec3 Triangle::getTexture(vec3& hit){
@@ -255,7 +240,7 @@ double Sphere::getSubtendedAngle(const vec3& origin) {
 	exit(1);
 }
 
-double Sphere::sampleLight(vec3& light, double num, TreeNode* tree){
+vec3 Sphere::shade(Intersection& hit, TreeNode* tree, const int num_samples) {
 	cout << "THIS IS NOT IMPLEMENTED" << endl;
 	exit(1);
 }
