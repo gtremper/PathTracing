@@ -20,7 +20,6 @@ using namespace std;
 // sets default values
 Scene::Scene(char* file) {
 	filename = "OUTPUT";
-	maxdepth = 5; 
 	diffuse = vec3(0,0,0);
 	specular = vec3(0,0,0);
 	shininess = 0;
