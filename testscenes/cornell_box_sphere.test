@@ -78,10 +78,10 @@ tri 20 22 23
 
 emission 0 0 0
 #spheres
-diffuse 0.7 0.5 0.2
-specular 1 1 1
+diffuse 0 0 1
+specular 0 0 1
 pushTransform
-translate 100 100 200
+translate 100 100 400
 scale 100 100 100
 sphere 0 0 0 1
 popTransform
