@@ -156,7 +156,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 		multiplier *= 1.0/(1.0-threshold);
 		color += light_angle * multiplier * hit.primative->specular * max(0.0,glm::dot(normal, newDirection)) * findColor(scene, newRay, depth-1);
 	}
-    return color;
+    return 2.0 * color;
 }
 
 /* Main raytracing function. Shoots ray for each pixel with anialiasing */
