@@ -115,7 +115,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	*********************************************/
 
     vec3 direct_lighting_color = vec3(0,0,0);
-    int num_shadow_rays = max(1.0, 10.0 / (depth / scene->maxdepth));
+    int num_shadow_rays = max(1.0, 2.0 / (depth / scene->maxdepth));
     double light_angle = 0.0;
     for (unsigned int i = 0; i < scene->lights.size(); i++) {
       light_angle += scene->lights[i]->getSubtendedAngle(hit.point);
