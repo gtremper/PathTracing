@@ -9,6 +9,7 @@
 
 # latex
 hw1.pdf
+hw2.pdf
 *.aux
 *.log
 *.synctex.gz
