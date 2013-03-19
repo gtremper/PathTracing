@@ -121,7 +121,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
       light_angle += scene->lights[i]->getSubtendedAngle(hit.point);
       direct_lighting_color += scene->lights[i]->shade(hit,scene->KDTree,num_shadow_rays);
     }
-    direct_lighting_color *= M_PI;
+    //direct_lighting_color *= M_PI;
 
 	/*********************************************
 	Importance sample global illumination
@@ -131,8 +131,10 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	double threshold = diffWeight / (diffWeight + specWeight);
 	double u1 = ((double)rand()/(double)RAND_MAX);
 
-    light_angle = (1.0 - (light_angle / (2 * M_PI)));
-    vec3 color = direct_lighting_color;
+    //light_angle = (1.0 - (light_angle / (2 * M_PI)));
+	light_angle = 1.0;
+	vec3 color = vec3(0,0,0);
+    //vec3 color = direct_lighting_color;
 	/* Importance sample on macro level to choose diffuse or specular */
 	if (u1 < threshold) {
 		vec3 newDirection = cos_weighted_hem(normal);
@@ -156,7 +158,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 		multiplier *= 1.0/(1.0-threshold);
 		color += light_angle * multiplier * hit.primative->specular * max(0.0,glm::dot(normal, newDirection)) * findColor(scene, newRay, depth-1);
 	}
-    return 2.0 * color;
+    return color*2.0*M_PI;
 }
 
 /* Main raytracing function. Shoots ray for each pixel with anialiasing */

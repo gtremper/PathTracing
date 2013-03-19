@@ -2,7 +2,7 @@
 # based on original cornell box data from:
 # http://www.graphics.cornell.edu/online/box/data.html
 
-size 720 720
+size 300 300
 output cornell_box.png
 maxdepth 5
 antialias 4
