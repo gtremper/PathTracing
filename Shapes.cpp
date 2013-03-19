@@ -99,6 +99,13 @@ double Triangle::getSubtendedAngle(const vec3& origin) {
 	return abs(result);
 }
 
+inline vec3 genSample(const vec3& p0, const vec3& p1, const vec3& p2) {
+	double u1 = double(rand()) / double(RAND_MAX);
+	double u2 = double(rand()) / double(RAND_MAX);
+	u1 = sqrt(u1);
+	return (1.0-u1)*p0 + u1*(1.0-u2)*p1 + u1*u2*p2;
+}
+
 /*
 returns shade
 */
@@ -108,12 +115,18 @@ vec3 Triangle::shade(Intersection& hit, TreeNode* tree, const int num_samples) {
 	vec3 s_specular = hit.primative->specular;
 	double s_shininess = hit.primative->shininess;
 	
+	/* Setup array to rotate through parts of triangle */
+	vec3 centroid = p0 + p1 + p2;
+	centroid /= 3.0;
+	vec3 corners[] = {p0,p1,p2};
+	int ind = 0;
+	
 	vec3 color = vec3(0,0,0);
 	for (int i=0; i<num_samples; i+=1){
-		double u1 = double(rand()) / double(RAND_MAX);
-		double u2 = double(rand()) / double(RAND_MAX);
-		u1 = sqrt(u1);
-		vec3 light_samp = (1.0-u1)*p0 + u1*(1.0-u2)*p1 + u1*u2*p2;
+		vec3 light_samp = genSample(corners[ind], corners[ind+1 % 3], centroid);
+		ind = (ind+1)%3;
+		//vec3 light_samp = genSample(p0, p1, p2);
+		
 		vec3 dir = glm::normalize(light_samp - hit.point);
 		Ray ray = Ray(hit.point + EPSILON * s_norm, dir);
 		Intersection light_hit = tree->intersect(ray);
@@ -135,12 +148,12 @@ vec3 Triangle::shade(Intersection& hit, TreeNode* tree, const int num_samples) {
 		double cos_weight = glm::dot(s_norm, dir);
 		cos_weight *= glm::dot(getNormal(light_hit.point), -dir);
 		cos_weight /= dist;
-		cos_weight *= 0.5 * glm::dot(p1-p0, p2-p0);
+		//cos_weight *= 0.5 * glm::dot(p1-p0, p2-p0);
 		
 		color += cos_weight * shade;
 	}
 	color /= double(num_samples);
-	return color;
+	return color * 0.5 * glm::dot(p1-p0, p2-p0);
 }
 
 

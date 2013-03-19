@@ -115,13 +115,12 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	*********************************************/
 
     vec3 direct_lighting_color = vec3(0,0,0);
-    int num_shadow_rays = max(1.0, 2.0 / (depth / scene->maxdepth));
+    int num_shadow_rays = 3;
     double light_angle = 0.0;
     for (unsigned int i = 0; i < scene->lights.size(); i++) {
       light_angle += scene->lights[i]->getSubtendedAngle(hit.point);
       direct_lighting_color += scene->lights[i]->shade(hit,scene->KDTree,num_shadow_rays);
     }
-    //direct_lighting_color *= M_PI;
 
 	/*********************************************
 	Importance sample global illumination
@@ -133,8 +132,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
     //light_angle = (1.0 - (light_angle / (2 * M_PI)));
 	light_angle = 1.0;
-	vec3 color = vec3(0,0,0);
-    //vec3 color = direct_lighting_color;
+    vec3 color = direct_lighting_color;
 	/* Importance sample on macro level to choose diffuse or specular */
 	if (u1 < threshold) {
 		vec3 newDirection = cos_weighted_hem(normal);
