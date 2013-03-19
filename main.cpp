@@ -57,17 +57,36 @@ vec3 cos_weighted_hem(vec3& norm){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
 
-	double theta = acos(sqrt(u1));
-	double phi = 2.0 * M_PI * u2;
+    vec3 y = vec3(norm);
+    vec3 h = vec3(norm);
+    double theta = acos(sqrt(1.0 - u1));
+    double phi = 2.0 * M_PI * u2;
+    double xs = sin(theta) * cos(phi);
+    double ys = cos(theta);
+    double zs = sin(theta) * sin(phi);
+    if ((fabs(h[0]) <= fabs(h[1])) && (fabs(h[0]) <= fabs(h[2])))
+      h[0] = 1.0;
+    else if ((fabs(h[1]) <= fabs(h[0])) && (fabs(h[1]) <= fabs(h[2])))
+      h[1] = 1.0;
+    else
+      h[2] = 1.0;
+    vec3 x = glm::cross(h,y);
+    vec3 z = glm::cross(x,y);
 
-	if (theta < EPSILON) {
-		return norm;
-	}
+    vec3 direction = xs * x + ys * y + zs * z;
+    return direction;
 
-	vec3 direction = vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
+	//double theta = acos(sqrt(u1));
+	//double phi = 2.0 * M_PI * u2;
 
-	/* Return direction rotated so its with respect to norm */
-	return center_axis(direction) * direction;
+	//if (theta < EPSILON) {
+	//	return norm;
+	//}
+
+    //vec3 direction = vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
+
+    ///* Return direction rotated so its with respect to norm */
+    //return center_axis(direction) * direction;
 }
 
 /* Sample a hemispehre for specular ray */
