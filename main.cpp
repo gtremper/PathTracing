@@ -134,16 +134,28 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	double u1 = ((double)rand()/(double)RAND_MAX);
 
 	vec3 color = vec3(0,0,0);
+    //light_angle = (1.0 - (light_angle / (2 * M_PI)));
+	light_angle = 1.0;
+    Intersection newhit;
+    vec3 newDirection;
+    Ray newRay;
 	/* Importance sample on macro level to choose diffuse or specular */
 	if (u1 < threshold) {
-		vec3 newDirection = cos_weighted_hem(normal);
-		Ray newRay(hit.point+EPSILON*normal, newDirection);
+		newDirection = cos_weighted_hem(normal);
+		newRay = Ray(hit.point+EPSILON*normal, newDirection);
+        newhit = scene->KDTree->intersect(newRay);
+        if (newhit.primative) {
+          if (glm::length(newhit.primative->emission) > EPSILON) {
+            color = vec3(0,0,0); //ignore direct lighting contribution
+          }
+        }
 		double prob = 1.0/threshold;
 		color += prob * hit.primative->diffuse * findColor(scene, newRay, depth-1);
 	} else {
 		vec3 reflect = glm::reflect(ray.direction, normal);
-		vec3 newDirection = specular_weighted_hem(reflect, hit.primative->shininess);
-		Ray newRay(hit.point+EPSILON*normal, newDirection);
+		newDirection = specular_weighted_hem(reflect, hit.primative->shininess);
+		newRay = Ray(hit.point+EPSILON*normal, newDirection);
+        newhit = scene->KDTree->intersect(newRay);
 
 		vec3 half = glm::normalize(hit.sourceDirection + newDirection);
 		double phong =	pow( max(0.0,glm::dot(half,normal)) , hit.primative->shininess);
