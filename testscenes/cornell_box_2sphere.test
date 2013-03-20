@@ -82,7 +82,7 @@ emission 0 0 0
 #spheres
 diffuse 0 0 0
 specular 1 1 1
-shininess 100
+shininess 30
 pushTransform
 translate 150 100 350
 scale 100 100 100
@@ -92,7 +92,7 @@ popTransform
 diffuse 1 1 1
 specular 0 0 0
 pushTransform
-translate 450 100 200
+translate 400 100 200
 scale 100 100 100
 sphere 0 0 0 1
 popTransform
