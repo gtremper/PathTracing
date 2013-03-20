@@ -153,7 +153,7 @@ vec3 Triangle::shade(Intersection& hit, TreeNode* tree) {
 		color += cos_weight * shade;
 	}
 	color /= double(num_samples);
-	return color * 2.0 * glm::dot(p1-p0, p2-p0);
+	return color * 1.0 * glm::dot(p1-p0, p2-p0);
 }
 
 

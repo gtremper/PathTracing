@@ -138,7 +138,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 		multiplier *= 1.0/(1.0-threshold);
 		color += multiplier * hit.primative->specular * max(0.0,glm::dot(normal, newDirection)) * findColor(scene, newRay, depth-1);
 	}
-	return color*2.0*M_PI;
+	return color*M_PI;
 }
 
 /* Main raytracing function. Shoots ray for each pixel with anialiasing */
@@ -321,7 +321,7 @@ void display(){
 		if (!rays_cast) {
 			direct_raytrace();
 		}
-		//raytrace(rays_cast);
+		raytrace(rays_cast);
 		BYTE* bits = FreeImage_GetBits(bitmap);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
 			0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
