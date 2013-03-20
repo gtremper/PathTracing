@@ -50,15 +50,6 @@ inline double average(vec3& v){
 }
 
 /** rotate the Z vector in the direction of norm */
-mat3 center_axis(const vec3& norm){
-	vec3 perp = glm::cross(Z,norm);
-	double angle = acos(glm::dot(Z,norm));
-	mat4 rotation = glm::rotate(mat4(1.0), angle, perp);
-
-	return mat3(rotation);
-}
-
-/** try again to rotate ray */
 vec3 rotate_axis(const vec3& sample, const vec3& reflected_dir) {
   double u1 = ((double)rand()/(double)RAND_MAX);
   double u2 = ((double)rand()/(double)RAND_MAX);
@@ -94,18 +85,6 @@ vec3 cos_weighted_hem(vec3& norm){
 
     vec3 direction = xs * x + ys * y + zs * z;
     return direction;
-
-	//double theta = acos(sqrt(u1));
-	//double phi = 2.0 * M_PI * u2;
-
-	//if (theta < EPSILON) {
-	//	return norm;
-	//}
-
-    //vec3 direction = vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
-
-    ///* Return direction rotated so its with respect to norm */
-    //return center_axis(direction) * direction;
 }
 
 /* Sample a hemispehre for specular ray */
@@ -121,18 +100,10 @@ vec3 specular_weighted_hem(vec3& reflection, const vec3& normal, double n){
 		return reflection;
 	}
 
-    //	original
-//	vec3 direction = vec3(cos(phi)*sin(alpha), cos(alpha), sin(phi)*sin(alpha));
-//	switched?
-//	vec3 direction = vec3(cos(phi)*sin(alpha), sin(phi)*sin(alpha), cos(alpha));
- //   return direction;
- //   from old 283 pro
-
     vec3 direction = vec3(sin(alpha)*cos(phi), sin(alpha)*sin(phi), u3);
 	/* return direction rotated so its with respecto to reflection */
     direction = rotate_axis(direction, reflection);
     return direction;
-	return center_axis(direction) * direction;
 }
 
 /* Shoot ray at scene */
