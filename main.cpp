@@ -62,7 +62,7 @@ print_matrix(const mat3& m) {
 }
 
 /** rotate the Z vector in the direction of norm */
-vec3 rotate_axis(const vec3& sample, const vec3& reflected_dir) {
+mat3 rotate_axis(const vec3& sample, const vec3& reflected_dir) {
   double u1 = ((double)rand()/(double)RAND_MAX);
   double u2 = ((double)rand()/(double)RAND_MAX);
   double u3 = ((double)rand()/(double)RAND_MAX);
@@ -71,7 +71,7 @@ vec3 rotate_axis(const vec3& sample, const vec3& reflected_dir) {
   vec3 v = glm::normalize(glm::cross(reflected_dir , u));
   mat3 rot = mat3(u, v, reflected_dir);
   rot = glm::transpose(rot);
-  return rot * sample;
+  return rot;
 }
 
 /* Sample a hemisphere for diffuse ray */
@@ -83,26 +83,7 @@ vec3 cos_weighted_hem(vec3& norm){
     double phi = 2.0*M_PI*u2;
     vec3 sample = vec3(sin(theta)*cos(phi), sin(theta)*sin(phi), u1);
 
-    return rotate_axis(sample, norm);
-
-    //vec3 y = vec3(norm);
-    //vec3 h = vec3(norm);
-    //double theta = acos(sqrt(1.0 - u1));
-    //double phi = 2.0 * M_PI * u2;
-    //double xs = sin(theta) * cos(phi);
-    //double ys = cos(theta);
-    //double zs = sin(theta) * sin(phi);
-    //if ((fabs(h[0]) <= fabs(h[1])) && (fabs(h[0]) <= fabs(h[2])))
-    //  h[0] = 1.0;
-    //else if ((fabs(h[1]) <= fabs(h[0])) && (fabs(h[1]) <= fabs(h[2])))
-    //  h[1] = 1.0;
-    //else
-    //  h[2] = 1.0;
-    //vec3 x = glm::cross(h,y);
-    //vec3 z = glm::cross(x,y);
-
-    //vec3 direction = xs * x + ys * y + zs * z;
-    //return direction;
+    return rotate_axis(sample, norm)*sample;
 }
 
 /* Sample a hemispehre for specular ray */
@@ -203,6 +184,7 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 	} else {
 		vec3 reflect = glm::reflect(ray.direction, normal);
 		vec3 newDirection = specular_weighted_hem(reflect, normal, hit.primative->shininess);
+		//vec3 newDirection = uniform_sample_hem(normal);
 		Ray newRay(hit.point+EPSILON*normal, newDirection);
 		
 		double dot = glm::dot(normal, newDirection);
