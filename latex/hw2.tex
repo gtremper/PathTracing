@@ -11,4 +11,19 @@
 
 \section{Introduction}
 
+The code was compiled using GLM 0.9.4.1 on Mac OSX 10.7.4 and 10.8.2. To compile, run \verb`make` from
+the \verb`PathTracing` directory. The test scenes are included in the \verb`testscenes` directory. The
+compiled binary, \verb`raytracer` accepts 1 mandatory argument which is the path to the test scene, and
+1 optional argument \verb`-f X`, where \verb`X` is the number of samples you wish to send at the scene.
+For example
+
+\begin{center}
+	\verb`prompt> ./raytracer testscenes/cornell_box.test`
+	\verb`prompt> ./raytracer -f 1000 testscenes/cornell_box.test`
+\end{center}
+
+If \verb`raytracer` is run without the optional \verb`-f` option, it enters an interactive mode. Pressing \verb`l`
+will send a round of samples at the scene and render the result. Pressing \verb`f` will send 10000 samples
+at the scene, and render after each result. Pressing \verb`s` will save the scene as a png file.
+
 \end{document}
