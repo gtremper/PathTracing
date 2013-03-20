@@ -41,10 +41,23 @@ The project was built upon a basic ray tracer programmed for CS184, which suppor
 \section{Extra Features}
 
 \subsection{Russian Roulette}
+Russian roulette allows for a ray termination scheme without introducing bias in the final picture that techniques such as a depth limit introduce.
 
 \subsection{Soft Shadows}
+We implemented soft shadows by using stratified sampling on the area lights. This was non-trivial, since we used triangle shaped emissive surfaces. In order to correctly stratify the triangle, we divided the triangle into six sections of equal area. This was done by finding the centroid of the triangle, and creating 6 new triangles as shown in the figure below.
+
+\begin{figure}
+	\begin{center}
+		\includegraphics[width=.5\linewidth]{figs/centroid}
+		\caption{Each of these six triangles has the same area.}
+	\end{center}
+\end{figure}
+
+For the global illumination, we achieved area lighting by simply having the lights be real objects in the scene. We assumed lights had no other reflective properties, so rays could always be terminated when one was hit. We also tried sampling the area light with a single shadow ray for each path tracer bounce, but had a large increase in compute time without much reduction in variance, so we omitted it.
 
 \subsection{Anti-aliasing}
+
+We implemented anti-aliasing by using a jittered sampling of the pixel for each sample. To reduce variance, we stratified the pixel based on the level of antialiasing to reduce variance. This works especially well with path tracing since we need to sample each pixel multiple times anyway. For most of our pictures, we used a 4x4 grid with 16 samples per pixel per iteration. 
 
 \section{Results}
 
