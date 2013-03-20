@@ -141,14 +141,8 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	vec3 color;
 	/* Importance sample on macro level to choose diffuse or specular */
 	if (u1 < threshold) {
-		newDirection = cos_weighted_hem(normal);
-		newRay = Ray(hit.point+EPSILON*normal, newDirection);
-        newhit = scene->KDTree->intersect(newRay);
-        if (newhit.primative) {
-          if (glm::length(newhit.primative->emission) > EPSILON) {
-            color = vec3(0,0,0); //ignore direct lighting contribution
-          }
-        }
+		vec3 newDirection = cos_weighted_hem(normal);
+		Ray newRay = Ray(hit.point+EPSILON*normal, newDirection);
 		double prob = 1.0/threshold;
 		color = prob * hit.primative->diffuse * findColor(scene, newRay, depth-1);
 	} else {
