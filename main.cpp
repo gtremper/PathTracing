@@ -67,24 +67,30 @@ vec3 cos_weighted_hem(vec3& norm){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
 
-    vec3 y = vec3(norm);
-    vec3 h = vec3(norm);
-    double theta = acos(sqrt(1.0 - u1));
-    double phi = 2.0 * M_PI * u2;
-    double xs = sin(theta) * cos(phi);
-    double ys = cos(theta);
-    double zs = sin(theta) * sin(phi);
-    if ((fabs(h[0]) <= fabs(h[1])) && (fabs(h[0]) <= fabs(h[2])))
-      h[0] = 1.0;
-    else if ((fabs(h[1]) <= fabs(h[0])) && (fabs(h[1]) <= fabs(h[2])))
-      h[1] = 1.0;
-    else
-      h[2] = 1.0;
-    vec3 x = glm::cross(h,y);
-    vec3 z = glm::cross(x,y);
+    double theta = acos(sqrt(u1));
+    double phi = 2.0*M_PI*u2;
+    vec3 sample = vec3(sin(theta)*cos(phi), sin(theta)*sin(phi), u1);
 
-    vec3 direction = xs * x + ys * y + zs * z;
-    return direction;
+    return rotate_axis(sample, norm);
+
+    //vec3 y = vec3(norm);
+    //vec3 h = vec3(norm);
+    //double theta = acos(sqrt(1.0 - u1));
+    //double phi = 2.0 * M_PI * u2;
+    //double xs = sin(theta) * cos(phi);
+    //double ys = cos(theta);
+    //double zs = sin(theta) * sin(phi);
+    //if ((fabs(h[0]) <= fabs(h[1])) && (fabs(h[0]) <= fabs(h[2])))
+    //  h[0] = 1.0;
+    //else if ((fabs(h[1]) <= fabs(h[0])) && (fabs(h[1]) <= fabs(h[2])))
+    //  h[1] = 1.0;
+    //else
+    //  h[2] = 1.0;
+    //vec3 x = glm::cross(h,y);
+    //vec3 z = glm::cross(x,y);
+
+    //vec3 direction = xs * x + ys * y + zs * z;
+    //return direction;
 }
 
 /* Sample a hemispehre for specular ray */
