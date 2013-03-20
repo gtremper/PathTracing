@@ -145,7 +145,7 @@ vertex 423.0   0.0 247.0
 tri 56 57 58
 tri 56 58 59
 
-emission 3 3 3
+emission 5 5 5
 #light!
 
 vertex 368 548 180
