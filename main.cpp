@@ -106,6 +106,19 @@ vec3 specular_weighted_hem(vec3& reflection, const vec3& normal, double n){
     return direction;
 }
 
+vec3 uniform_sample_hem(vec3& norm) {
+	double u1 = ((double)rand()/(double)RAND_MAX);
+	double u2 = ((double)rand()/(double)RAND_MAX);
+    double phi = 2.0* M_PI * u2;
+    double r = sqrt(1.0 - (u1 * u1));
+    vec3 dir = vec3(cos(phi) * r, sin(phi) * r, u1);
+    if (glm::dot(dir, norm) < 0)
+      return -dir;
+    return dir;
+    //dir = rotate_axis(dir, norm);
+    //return dir;
+}
+
 /* Shoot ray at scene */
 vec3 findColor(Scene* scene, Ray& ray, double weight) {
 
