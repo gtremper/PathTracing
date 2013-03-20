@@ -49,6 +49,18 @@ inline double average(vec3& v){
 	return (v[0] + v[1] + v[2]) / 3.0;
 }
 
+void
+print_vector(const vec3& v) {
+    cout << v[0] << " " << v[1] << " " << v[2] << endl;
+}
+
+void
+print_matrix(const mat3& m) {
+    cout << m[0][0] << "|" << m[0][1] << "| " << m[0][2] << endl;
+    cout << m[1][0] << "|" << m[1][1] << "| " << m[1][2] << endl;
+    cout << m[2][0] << "|" << m[2][1] << "| " << m[2][2] << endl;
+}
+
 /** rotate the Z vector in the direction of norm */
 vec3 rotate_axis(const vec3& sample, const vec3& reflected_dir) {
   double u1 = ((double)rand()/(double)RAND_MAX);
