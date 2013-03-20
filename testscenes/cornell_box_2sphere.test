@@ -58,7 +58,7 @@ tri 12 13 14
 tri 12 14 15
 
 # red diffuse value
-diffuse 1 0 0
+diffuse 0 .7 .7
 #diffuse 0.63 0.06 0.04
 #specular 0.63 0.06 0.04
 # left wall
@@ -80,19 +80,19 @@ tri 20 22 23
 
 emission 0 0 0
 #spheres
-diffuse 0 0 0
-specular 1 1 1
-shininess 30
+diffuse .5 .5 .2
+specular .5 .5 .2
+shininess 100
 pushTransform
 translate 150 100 350
 scale 100 100 100
 sphere 0 0 0 1
 popTransform
 
-diffuse 1 1 1
+diffuse .2 .5 .8
 specular 0 0 0
 pushTransform
-translate 400 100 200
-scale 100 100 100
+translate 400 60 250
+scale 60 60 60
 sphere 0 0 0 1
 popTransform
