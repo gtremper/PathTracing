@@ -113,24 +113,35 @@ vec3 specular_weighted_hem(vec3& reflection, double n){
 }
 
 /* Shoot ray at scene */
-vec3 findColor(Scene* scene, Ray& ray, int depth) {
+vec3 findColor(Scene* scene, Ray& ray, double weight) {
 
 	/* Intersect scene */
 	Intersection hit = scene->KDTree->intersect(ray);
-
-	// Should eventually replace this with russian roulette
-	if(!hit.primative || depth==1) {
+	if(!hit.primative) {
 		return vec3(0,0,0); //background color
 	}
-	/* Tempararily return if hit light */
-	// Maybe should weight this with specular and diffuse
+	
+	/* Russian Roulette */
+	double russian = 1.0;
+	const double cutoff = 0.1;
+	if (weight < 0.001) {
+		return vec3(0,0,0);
+		double u1 = ((double)rand()/(double)RAND_MAX);
+		if (u1 > cutoff) {
+			return vec3(0,0,0);
+		} else {
+			russian = 1.0/cutoff;
+		}
+	}
+	weight *= 0.99; // so it wont go forever
+	
+	
 	if( average(hit.primative->emission) > EPSILON ){
 		return hit.primative->emission;
 	}
 
 	vec3 normal = hit.primative->getNormal(hit.point);
-
-
+	
 	/*********************************************
 	Importance sample global illumination
 	*********************************************/
@@ -145,7 +156,7 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 		vec3 newDirection = cos_weighted_hem(normal);
 		Ray newRay = Ray(hit.point+EPSILON*normal, newDirection);
 		double prob = 1.0/threshold;
-		color = prob * hit.primative->diffuse * findColor(scene, newRay, depth-1);
+		color = prob * hit.primative->diffuse * findColor(scene, newRay, weight*diffWeight);
 	} else {
 		vec3 reflect = glm::reflect(ray.direction, normal);
 		vec3 newDirection = specular_weighted_hem(reflect, hit.primative->shininess);
@@ -167,9 +178,10 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 		double multiplier = phong / prob;
 		multiplier *= 1.0/(1.0-threshold);
 		multiplier *= dot;
-		color = multiplier * hit.primative->specular * findColor(scene, newRay, depth-1);
+		color = multiplier * hit.primative->specular * findColor(scene, newRay, specWeight*weight);
 	}
-	return color*M_PI;
+	
+	return russian*color;
 }
 
 /* Main raytracing function. Shoots ray for each pixel with anialiasing */
@@ -195,7 +207,7 @@ void raytrace(double rayscast) {
 					double randomNum1 = ((double)rand()/(double)RAND_MAX) * subdivide;
 					double randomNum2 = ((double)rand()/(double)RAND_MAX) * subdivide;
 					Ray ray = scene->castEyeRay(i+(a*subdivide) + randomNum1,j+(b*subdivide)+randomNum2);
-					color += findColor(scene, ray, scene->maxdepth);
+					color += findColor(scene, ray, 1.0);
 				}
 			}
 			color *= (subdivide * subdivide);
