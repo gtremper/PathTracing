@@ -28,6 +28,7 @@ double rays_cast;
 Scene* scene;
 int height;
 int width;
+int numFrames = 0;
 
 /* Shaders */
 GLuint vertexshader;
@@ -307,7 +308,7 @@ void keyboard(unsigned char key, int x, int y) {
 void init(char* filename) {
 	scene = new Scene(filename);
 	rays_cast = 0.0;
-	update = false;
+	update = numFrames ? numFrames : false;
 	width = scene->width;
 	height = scene->height;
 	pixels = new vec3[width*height];
@@ -345,22 +346,33 @@ void init(char* filename) {
 void display(){
 	glClear(GL_COLOR_BUFFER_BIT);
 
+    int repetitions = numFrames;
 	if (update){
-		cout << "Iterations left: " << update << endl;
-		time_t seconds = time(NULL);
-		if (!rays_cast) {
-			direct_raytrace();
-		}
-		raytrace(rays_cast);
-		BYTE* bits = FreeImage_GetBits(bitmap);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
-			0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
-		rays_cast += 1.0;
-		cout << "Number of Samples: " << rays_cast <<
-		"\tTime: " << time(NULL)-seconds <<" seconds" << endl;
-		update -= 1;
-		glutPostRedisplay();
+        do {
+          cout << "Iterations left: " << update << endl;
+          time_t seconds = time(NULL);
+          if (!rays_cast) {
+              direct_raytrace();
+          }
+          raytrace(rays_cast);
+          BYTE* bits = FreeImage_GetBits(bitmap);
+          glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
+              0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+          rays_cast += 1.0;
+          cout << "Number of Samples: " << rays_cast <<
+          "\tTime: " << time(NULL)-seconds <<" seconds" << endl;
+          update -= 1;
+          if (!numFrames) glutPostRedisplay();
+          else repetitions -= 1;
+        } while (repetitions);
 	}
+    if (numFrames && !update) {
+        stringstream saved;
+        saved << scene->filename<<"_"<< int(rays_cast) << ".png";
+        FreeImage_Save(FIF_PNG, bitmap, saved.str().c_str(), 0);
+        cout << "Image saved to " << saved.str() << "!" << endl;
+        exit(0);
+    }
 
 	glBegin(GL_QUADS);
 	glTexCoord2d(0, 0); glVertex3d(-1, -1, 0);
@@ -372,16 +384,27 @@ void display(){
 	glutSwapBuffers();
 }
 
+void parse_command_line(int argc, char* argv[]) {
+    for (int i = 1; i < argc-1 ; i++) {
+      if (strcmp(argv[i],"-f") == 0) {
+          numFrames = atoi(argv[i+1]);
+          cout << "Running " << numFrames << " times" << endl;
+          break;
+      }
+    }
+}
+
 int main(int argc, char* argv[]){
-	if(argc != 2) {
-		cerr << "You need 1 scene file as the argument" << endl;
+	if(argc < 2) {
+		cerr << "You need at least 1 scene file as the argument" << endl;
 		exit(1);
 	}
 	srand(time(0));
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutCreateWindow("Path Tracer");
-	init(argv[1]);
+    parse_command_line(argc, argv);
+	init(argv[argc-1]);
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutReshapeFunc(reshape);
