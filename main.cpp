@@ -147,7 +147,7 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 	/* Russian Roulette */
 	double russian = 1.0;
 	const double cutoff = 0.1;
-	if (weight < 0.01) {
+	if (weight < 0.001) {
 		return vec3(0,0,0);
 		double u1 = ((double)rand()/(double)RAND_MAX);
 		if (u1 > cutoff) {
@@ -156,6 +156,7 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 			russian = 1.0/cutoff;
 		}
 	}
+	weight *= 0.95;
 	
 	
 	if( average(hit.primative->emission) > EPSILON ){
