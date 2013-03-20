@@ -23,14 +23,13 @@ class Shape {
 		virtual double intersect(Ray&)=0;
 		virtual vec3 getNormal(vec3&)=0;
 		virtual double getSubtendedAngle(const vec3&)=0;
-		virtual vec3 shade(Intersection&, TreeNode*, const int)=0;
+		virtual vec3 shade(Intersection&, TreeNode*)=0;
 	//	virtual vec3 getTexture(vec3&){};
 		
 		AABB aabb;
 		//bool hasTexture;
 		
 		/* material properties */
-		//vec3 ambient;
 		vec3 diffuse;
 		vec3 specular;
 		double shininess;
@@ -45,7 +44,7 @@ class Sphere : public Shape {
 		double intersect(Ray&);
 		vec3 getNormal(vec3&);
 		double getSubtendedAngle(const vec3&);
-		vec3 shade(Intersection&, TreeNode*, const int);
+		vec3 shade(Intersection&, TreeNode*);
 		mat4 mv;
 		mat4 inv;	
 };
@@ -57,7 +56,7 @@ class Triangle : public Shape {
 		double intersect(Ray&);
 		virtual vec3 getNormal(vec3&);
 		double getSubtendedAngle(const vec3&);
-		vec3 shade(Intersection&, TreeNode*, const int);
+		vec3 shade(Intersection&, TreeNode*);
 	//	vec3 getTexture(vec3&);
 	
 		vec3 p0;

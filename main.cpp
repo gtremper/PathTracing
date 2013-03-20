@@ -36,6 +36,7 @@ GLuint shaderprogram;
 GLuint texture;
 FIBITMAP* bitmap;
 vec3 * pixels;
+vec3 * direct_pixels;
 int update;
 
 const vec3 X = vec3(1,0,0);
@@ -63,10 +64,10 @@ vec3 cos_weighted_hem(vec3& norm){
 		return norm;
 	}
 
-    vec3 direction = vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
+	vec3 direction = vec3(cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta));
 
-    /* Return direction rotated so its with respect to norm */
-    return center_axis(direction) * direction;
+	/* Return direction rotated so its with respect to norm */
+	return center_axis(direction) * direction;
 }
 
 /* Sample a hemispehre for specular ray */
@@ -82,21 +83,15 @@ vec3 specular_weighted_hem(vec3& reflection, double n){
 	}
 	vec3 direction = vec3(cos(phi)*sin(alpha), sin(phi)*sin(alpha), cos(alpha));
 
-    /* return direction rotated so its with respecto to reflection */
-    return center_axis(direction) * direction;
+	/* return direction rotated so its with respecto to reflection */
+	return center_axis(direction) * direction;
 }
 
 /* Shoot ray at scene */
 vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
-	/*********************************************
-	Initial scene intersection and termination logic
-	*********************************************/
-
 	/* Intersect scene */
 	Intersection hit = scene->KDTree->intersect(ray);
-
-
 
 	// Should eventually replace this with russian roulette
 	if(!hit.primative || depth==1) {
@@ -110,17 +105,6 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
 	vec3 normal = hit.primative->getNormal(hit.point);
 
-	/*********************************************
-	Direct lighting
-	*********************************************/
-
-    vec3 direct_lighting_color = vec3(0,0,0);
-    int num_shadow_rays = 3;
-    double light_angle = 0.0;
-    for (unsigned int i = 0; i < scene->lights.size(); i++) {
-      light_angle += scene->lights[i]->getSubtendedAngle(hit.point);
-      direct_lighting_color += scene->lights[i]->shade(hit,scene->KDTree,num_shadow_rays);
-    }
 
 	/*********************************************
 	Importance sample global illumination
@@ -130,22 +114,20 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	double threshold = diffWeight / (diffWeight + specWeight);
 	double u1 = ((double)rand()/(double)RAND_MAX);
 
-    //light_angle = (1.0 - (light_angle / (2 * M_PI)));
-	light_angle = 1.0;
-    vec3 color = direct_lighting_color;
+	vec3 color = vec3(0,0,0);
 	/* Importance sample on macro level to choose diffuse or specular */
 	if (u1 < threshold) {
 		vec3 newDirection = cos_weighted_hem(normal);
 		Ray newRay(hit.point+EPSILON*normal, newDirection);
 		double prob = 1.0/threshold;
-		color += light_angle * prob * hit.primative->diffuse * findColor(scene, newRay, depth-1);
+		color += prob * hit.primative->diffuse * findColor(scene, newRay, depth-1);
 	} else {
 		vec3 reflect = glm::reflect(ray.direction, normal);
 		vec3 newDirection = specular_weighted_hem(reflect, hit.primative->shininess);
 		Ray newRay(hit.point+EPSILON*normal, newDirection);
 
 		vec3 half = glm::normalize(hit.sourceDirection + newDirection);
-		double phong =  pow( max(0.0,glm::dot(half,normal)) , hit.primative->shininess);
+		double phong =	pow( max(0.0,glm::dot(half,normal)) , hit.primative->shininess);
 
 		/* Get probability for importance sampling */
 		double cosalpha = glm::dot(newDirection,reflect);
@@ -154,16 +136,16 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 
 		double multiplier = phong / prob;
 		multiplier *= 1.0/(1.0-threshold);
-		color += light_angle * multiplier * hit.primative->specular * max(0.0,glm::dot(normal, newDirection)) * findColor(scene, newRay, depth-1);
+		color += multiplier * hit.primative->specular * max(0.0,glm::dot(normal, newDirection)) * findColor(scene, newRay, depth-1);
 	}
-    return color*2.0*M_PI;
+	return color*2.0*M_PI;
 }
 
 /* Main raytracing function. Shoots ray for each pixel with anialiasing */
 /* ouputs bitmap to global variable*/
 void raytrace(double rayscast) {
 	double subdivisions = scene->antialias;
-	double subdivide = 1/subdivisions;
+	double subdivide = 1.0/subdivisions;
 
 	double old_weight = rayscast/(rayscast+1.0);
 	double new_weight = 1.0 - old_weight;
@@ -188,13 +170,67 @@ void raytrace(double rayscast) {
 			color *= (subdivide * subdivide);
 			pixels[i + scene->width*j] *= old_weight;
 			pixels[i + scene->width*j] += new_weight*color;
-			color = pixels[i + scene->width*j];
+			color = pixels[i + scene->width*j] + direct_pixels[i + scene->width*j];
 			rgb.rgbRed = min(color[0],1.0)*255.0;
 			rgb.rgbGreen = min(color[1],1.0)*255.0;
 			rgb.rgbBlue = min(color[2],1.0)*255.0;
 			FreeImage_SetPixelColor(bitmap,i,j,&rgb);
 		}
 	}
+}
+
+/* Only the direct lighting */
+vec3 direct_lighting(Scene* scene, Ray& ray){
+
+	/* Intersect scene */
+	Intersection hit = scene->KDTree->intersect(ray);
+
+	if(!hit.primative) {
+		return vec3(0,0,0); //background color
+	}
+	if( glm::length(hit.primative->emission) > EPSILON ){
+		return hit.primative->emission;
+	}
+
+	vec3 color = vec3(0,0,0);
+	for (unsigned int i = 0; i < scene->lights.size(); i++) {
+		color += scene->lights[i]->shade(hit, scene->KDTree);
+	}
+	return color;
+}
+
+
+/* Calculate the direct lighting seperatly */
+void direct_raytrace() {
+	double subdivisions = scene->antialias;
+	double subdivide = 1.0/subdivisions;
+
+	#pragma omp parallel for
+	for (int j=0; j<scene->height; j++){
+		int tid = omp_get_thread_num();
+		if(tid == 0) {
+		   clog << "Direct Lighting: "<< (j*100*omp_get_num_threads())/scene->height <<"%"<<"\r";
+		}
+		RGBQUAD rgb;
+		for (int i=0; i<scene->width; i++) {
+			vec3 color;
+			for(double a=0; a<subdivisions; a+=1) {
+				for(double b=0; b<subdivisions; b+=1) {
+					double randomNum1 = ((double)rand()/(double)RAND_MAX) * subdivide;
+					double randomNum2 = ((double)rand()/(double)RAND_MAX) * subdivide;
+					Ray ray = scene->castEyeRay(i+(a*subdivide) + randomNum1,j+(b*subdivide)+randomNum2);
+					color += direct_lighting(scene, ray);
+				}
+			}
+			color *= (subdivide * subdivide);
+			direct_pixels[i + scene->width*j] = color;
+			rgb.rgbRed = min(color[0],1.0)*255.0;
+			rgb.rgbGreen = min(color[1],1.0)*255.0;
+			rgb.rgbBlue = min(color[2],1.0)*255.0;
+			FreeImage_SetPixelColor(bitmap,i,j,&rgb);
+		}
+	}
+	clog << "	done\n";
 }
 
 /* Everything below here is openGL boilerplate */
@@ -230,6 +266,7 @@ void keyboard(unsigned char key, int x, int y) {
 			FreeImage_DeInitialise();
 			delete scene;
 			delete pixels;
+			delete direct_pixels;
 			exit(0);
 			break;
 
@@ -244,7 +281,10 @@ void init(char* filename) {
 	width = scene->width;
 	height = scene->height;
 	pixels = new vec3[width*height];
+	direct_pixels = new vec3[width*height];
 	memset(pixels, 0, sizeof(vec3)*width*height);
+	memset(direct_pixels, 0, sizeof(vec3)*width*height);
+	
 	FreeImage_Initialise();
 	bitmap = FreeImage_Allocate(width, height, BPP);
 
@@ -278,7 +318,10 @@ void display(){
 	if (update){
 		cout << "Iterations left: " << update << endl;
 		time_t seconds = time(NULL);
-		raytrace(rays_cast);
+		if (!rays_cast) {
+			direct_raytrace();
+		}
+		//raytrace(rays_cast);
 		BYTE* bits = FreeImage_GetBits(bitmap);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
 			0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);

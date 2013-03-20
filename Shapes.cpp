@@ -109,22 +109,22 @@ inline vec3 genSample(const vec3& p0, const vec3& p1, const vec3& p2) {
 /*
 returns shade
 */
-vec3 Triangle::shade(Intersection& hit, TreeNode* tree, const int num_samples) {
+vec3 Triangle::shade(Intersection& hit, TreeNode* tree) {
 	vec3 s_norm = hit.primative->getNormal(hit.point);
 	vec3 s_diffuse = hit.primative->diffuse;
 	vec3 s_specular = hit.primative->specular;
 	double s_shininess = hit.primative->shininess;
 	
+	const int num_samples = 6;
+	
 	/* Setup array to rotate through parts of triangle */
 	vec3 centroid = p0 + p1 + p2;
 	centroid /= 3.0;
-	vec3 corners[] = {p0,p1,p2};
-	int ind = 0;
+	vec3 corners[] = {p0, (p0+p1)/2.0, p1, (p1+p2)/2.0, p2, (p2+p0)/2.0, p0};
 	
 	vec3 color = vec3(0,0,0);
 	for (int i=0; i<num_samples; i+=1){
-		vec3 light_samp = genSample(corners[ind], corners[ind+1 % 3], centroid);
-		ind = (ind+1)%3;
+		vec3 light_samp = genSample(corners[i], corners[i+1], centroid);
 		//vec3 light_samp = genSample(p0, p1, p2);
 		
 		vec3 dir = glm::normalize(light_samp - hit.point);
@@ -153,7 +153,7 @@ vec3 Triangle::shade(Intersection& hit, TreeNode* tree, const int num_samples) {
 		color += cos_weight * shade;
 	}
 	color /= double(num_samples);
-	return color * 0.5 * glm::dot(p1-p0, p2-p0);
+	return color * 2.0 * glm::dot(p1-p0, p2-p0);
 }
 
 
@@ -253,7 +253,7 @@ double Sphere::getSubtendedAngle(const vec3& origin) {
 	exit(1);
 }
 
-vec3 Sphere::shade(Intersection& hit, TreeNode* tree, const int num_samples) {
+vec3 Sphere::shade(Intersection& hit, TreeNode* tree) {
 	cout << "THIS IS NOT IMPLEMENTED" << endl;
 	exit(1);
 }
