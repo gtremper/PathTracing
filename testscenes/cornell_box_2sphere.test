@@ -69,7 +69,7 @@ vertex 556.0 548.8 0.0
 tri 16 17 18
 tri 16 18 19
 
-emission 1 1 1
+emission 3 3 3
 #light!
 vertex 368 548 180
 vertex 368 548 360
@@ -81,7 +81,8 @@ tri 20 22 23
 emission 0 0 0
 #spheres
 diffuse 0 0 0
-specular .3 .3 .3
+specular 1 1 1
+shininess 100
 pushTransform
 translate 150 100 350
 scale 100 100 100
