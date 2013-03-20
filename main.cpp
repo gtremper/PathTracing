@@ -172,16 +172,19 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 		if (dot < 0.0) {
 			return vec3(0,0,0);
 		}
-
+		/*
 		vec3 half = glm::normalize(hit.sourceDirection + newDirection);
 		double phong =	pow( max(0.0,glm::dot(half,normal)) , hit.primative->shininess);
 
-		/* Get probability for importance sampling */
+		 Get probability for importance sampling 
 		double cosalpha = glm::dot(newDirection,reflect);
 		cosalpha = pow(cosalpha, hit.primative->shininess);
 		double prob = cosalpha * (hit.primative->shininess + 1.0) / (2.0 * M_PI);
+		*/
+		
+		double n = hit.primative->shininess;
 
-		double multiplier = phong / prob;
+		double multiplier = (n + 2.0) / (n + 1.0);
 		multiplier *= 1.0/(1.0-threshold);
 		multiplier *= dot;
 		color = multiplier * hit.primative->specular * findColor(scene, newRay, specWeight*weight);
