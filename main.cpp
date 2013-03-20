@@ -195,8 +195,8 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 		vec3 half = glm::normalize(hit.sourceDirection + newDirection);
 		double phong =	pow( max(0.0,glm::dot(half,normal)) , hit.primative->shininess);
 
-		 Get probability for importance sampling 
-		double cosalpha = glm::dot(newDirection,reflect);
+		/* Get probability for importance sampling 
+		double cosalpha = max(0.0,glm::dot(newDirection,reflect));
 		cosalpha = pow(cosalpha, hit.primative->shininess);
 		double prob = cosalpha * (hit.primative->shininess + 1.0) / (2.0 * M_PI);
 		*/
@@ -206,7 +206,8 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 		double multiplier = (n + 2.0) / (n + 1.0);
 		multiplier *= 1.0/(1.0-threshold);
 		multiplier *= dot;
-		color = multiplier * hit.primative->specular * findColor(scene, newRay, specWeight*weight);
+        multiplier = (hit.primative->shininess + 1.0) / (hit.primative->shininess + 2.0);
+		color =  multiplier * hit.primative->specular * findColor(scene, newRay, specWeight*weight);
 	}
 	
 	return russian*color;
