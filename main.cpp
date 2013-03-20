@@ -350,7 +350,7 @@ void display(){
 		if (!rays_cast) {
 			direct_raytrace();
 		}
-		//raytrace(rays_cast);
+		raytrace(rays_cast);
 		BYTE* bits = FreeImage_GetBits(bitmap);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
 			0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
