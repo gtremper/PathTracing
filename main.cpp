@@ -319,32 +319,35 @@ void init(char* filename) {
 	FreeImage_Initialise();
 	bitmap = FreeImage_Allocate(width, height, BPP);
 
-	vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
-	fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
-	shaderprogram = initprogram(vertexshader, fragmentshader);
+    if (!numFrames) {
+        vertexshader = initshaders(GL_VERTEX_SHADER, "shaders/vert.glsl");
+        fragmentshader = initshaders(GL_FRAGMENT_SHADER, "shaders/frag.glsl");
+        shaderprogram = initprogram(vertexshader, fragmentshader);
 
-	glGenTextures(1, &texture);
-	glEnable(GL_TEXTURE_2D) ;
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glActiveTexture(GL_TEXTURE0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glGenTextures(1, &texture);
+        glEnable(GL_TEXTURE_2D) ;
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glActiveTexture(GL_TEXTURE0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	BYTE* bits = FreeImage_GetBits(bitmap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
-		0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
+        BYTE* bits = FreeImage_GetBits(bitmap);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
+            0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1,1,-1,1,-1,1);
-	glMatrixMode(GL_MODELVIEW);
-	glm::mat4 mv = glm::lookAt(glm::vec3(0,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
-	glLoadMatrixf(&mv[0][0]);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(-1,1,-1,1,-1,1);
+        glMatrixMode(GL_MODELVIEW);
+        glm::mat4 mv = glm::lookAt(glm::vec3(0,0,1),glm::vec3(0,0,0),glm::vec3(0,1,0));
+        glLoadMatrixf(&mv[0][0]);
+    }
 
 }
 
 void display(){
-	glClear(GL_COLOR_BUFFER_BIT);
+    if (!numFrames)
+      glClear(GL_COLOR_BUFFER_BIT);
 
     int repetitions = numFrames;
 	if (update){
@@ -356,6 +359,7 @@ void display(){
           }
           raytrace(rays_cast);
           BYTE* bits = FreeImage_GetBits(bitmap);
+          if (!numFrames)
           glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scene->width, scene->height,
               0, GL_BGR, GL_UNSIGNED_BYTE, (GLvoid*)bits);
           rays_cast += 1.0;
@@ -400,11 +404,13 @@ int main(int argc, char* argv[]){
 		exit(1);
 	}
 	srand(time(0));
+    parse_command_line(argc, argv);
+	init(argv[argc-1]);
+    if (numFrames)
+      display();
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
 	glutCreateWindow("Path Tracer");
-    parse_command_line(argc, argv);
-	init(argv[argc-1]);
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutReshapeFunc(reshape);
