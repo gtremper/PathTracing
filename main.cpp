@@ -134,8 +134,6 @@ vec3 findColor(Scene* scene, Ray& ray, int depth) {
 	double u1 = ((double)rand()/(double)RAND_MAX);
 
 	vec3 color = vec3(0,0,0);
-    //light_angle = (1.0 - (light_angle / (2 * M_PI)));
-	light_angle = 1.0;
     Intersection newhit;
     vec3 newDirection;
     Ray newRay;
