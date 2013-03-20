@@ -170,20 +170,20 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 	/* Importance sample on macro level to choose diffuse or specular */
 	vec3 normal = hit.primative->getNormal(hit.point);
 	vec3 color;
+    Ray newRay;
 	if (u1 < threshold) {
 		vec3 newDirection = cos_weighted_hem(normal);
-		Ray newRay = Ray(hit.point+EPSILON*normal, newDirection);
+		newRay = Ray(hit.point+EPSILON*normal, newDirection);
 		double prob = 1.0/threshold;
 		color += prob * hit.primative->diffuse * findColor(scene, newRay, weight*diffWeight);
 	} else {
 		vec3 reflect = glm::reflect(ray.direction, normal);
-		reflect = glm::normalize(reflect);
-		//Ray newRay(hit.point+EPSILON*normal, reflect);
+		//newRay = Ray(hit.point+EPSILON*normal, reflect);
 		//color += findColor(scene, newRay, specWeight*weight);
 		
 		vec3 newDirection = specular_weighted_hem(reflect, normal, hit.primative->shininess);
 		//vec3 newDirection = uniform_sample_hem(normal);
-		Ray newRay(hit.point+EPSILON*normal, newDirection);
+		newRay = Ray(hit.point+EPSILON*normal, newDirection);
 		
 		double dot = glm::dot(normal, newDirection);
 		if (dot < 0.0) {
