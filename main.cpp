@@ -91,7 +91,6 @@ vec3 cos_weighted_hem(vec3& norm){
 vec3 specular_weighted_hem(vec3& reflection, const vec3& normal, double n){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
-	double u3 = ((double)rand()/(double)RAND_MAX);
 
 	double alpha = acos( pow( u1, 1.0 / (n + 1.0) ) );
 	double phi = 2.0 * M_PI * u2;
@@ -100,7 +99,7 @@ vec3 specular_weighted_hem(vec3& reflection, const vec3& normal, double n){
 		return reflection;
 	}
 
-    vec3 direction = vec3(sin(alpha)*cos(phi), sin(alpha)*sin(phi), u3);
+    vec3 direction = vec3(sin(alpha)*cos(phi), sin(alpha)*sin(phi), u2);
 	/* return direction rotated so its with respecto to reflection */
     direction = rotate_axis(direction, reflection);
     return direction;
