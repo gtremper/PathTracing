@@ -74,7 +74,22 @@ mat3 rotate_axis(const vec3& sample, const vec3& reflected_dir) {
   return rot;
 }
 
-/* Sample a hemisphere for diffuse ray */
+mat3 rotate_around_axis(vec3& rotation_axis, double theta, vec3& vec_in) {
+    rotation_axis = glm::normalize(rotation_axis);
+    double common_factor = sin(theta*0.5);
+    double a = cos(theta*0.5);
+    double b = rotation_axis[0] * common_factor;
+    double c = rotation_axis[1] * common_factor;
+    double d = rotation_axis[2] * common_factor;
+
+    mat3 m = mat3(a*a + b*b - c*c -d*d, 2*(b*c-a*d), 2*(b*d+a*c),
+                  2*(b*c+a*d), a*a-b*b+c*c-d*d, 2*(c*d-a*b),
+                  2*(b*d-a*c), 2*(c*d+a*b), a*a-b*b-c*d+d*d);
+    return m;
+
+}
+
+/* Sample a hemisphere f(r diffuse ray */
 vec3 cos_weighted_hem(vec3& norm){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
@@ -91,27 +106,14 @@ vec3 specular_weighted_hem(vec3& reflection, const vec3& normal, double n){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
 
-//    vec3 y = vec3(normal);
-//    vec3 h = vec3(normal);
-//	double alpha = acos( pow( u1, 1.0 / (n + 1.0) ) );
-//    double phi = 2.0 * M_PI * u2;
-//    double xs = sin(alpha) * cos(phi);
-//    double ys = sin(alpha) * sin(phi);
-//    double zs = u2;
-//    if ((fabs(h[0]) <= fabs(h[1])) && (fabs(h[0]) <= fabs(h[2])))
-//      h[0] = 1.0;
-//    else if ((fabs(h[1]) <= fabs(h[0])) && (fabs(h[1]) <= fabs(h[2])))
-//      h[1] = 1.0;
-//    else
-//      h[2] = 1.0;
-//    vec3 x = glm::cross(h,y);
-//    vec3 z = glm::cross(x,y);
-
-    double alpha = acos(pow(u1, 1/(1+n+1.0)));
+    double alpha = acos(pow(u1, 1.0/(1+n+1.0)));
     double phi = 2 * M_PI * u2;
-    vec3 sample = vec3(sin(alpha)*cos(phi), sin(alpha)*sin(phi), u1);
+    vec3 sample = vec3(sin(alpha)*cos(phi), sin(alpha)*sin(phi), cos(alpha));
+    double angle_between = acos(reflection[2]);
+    vec3 rotation_axis = vec3( -reflection[1], reflection[0], 0.0);
+    rotation_axis = glm::normalize(rotation_axis);
 
-    return rotate_axis(sample, reflection);
+    return rotate_around_axis(rotation_axis, angle_between, sample) * sample;
 
 	if (alpha < EPSILON) {
 		return reflection;
