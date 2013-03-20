@@ -115,17 +115,16 @@ vec3 Triangle::shade(Intersection& hit, TreeNode* tree) {
 	vec3 s_specular = hit.primative->specular;
 	double s_shininess = hit.primative->shininess;
 	
-	const int num_samples = 6;
-	
 	/* Setup array to rotate through parts of triangle */
 	vec3 centroid = p0 + p1 + p2;
 	centroid /= 3.0;
 	vec3 corners[] = {p0, (p0+p1)/2.0, p1, (p1+p2)/2.0, p2, (p2+p0)/2.0, p0};
 	
+	const int num_samples = 6;
 	vec3 color = vec3(0,0,0);
 	for (int i=0; i<num_samples; i+=1){
+		
 		vec3 light_samp = genSample(corners[i], corners[i+1], centroid);
-		//vec3 light_samp = genSample(p0, p1, p2);
 		
 		vec3 dir = glm::normalize(light_samp - hit.point);
 		Ray ray = Ray(hit.point + EPSILON * s_norm, dir);
@@ -148,7 +147,6 @@ vec3 Triangle::shade(Intersection& hit, TreeNode* tree) {
 		double cos_weight = glm::dot(s_norm, dir);
 		cos_weight *= glm::dot(getNormal(light_hit.point), -dir);
 		cos_weight /= dist;
-		//cos_weight *= 0.5 * glm::dot(p1-p0, p2-p0);
 		
 		color += cos_weight * shade;
 	}

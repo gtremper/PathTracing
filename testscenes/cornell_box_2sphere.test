@@ -69,7 +69,7 @@ vertex 556.0 548.8 0.0
 tri 16 17 18
 tri 16 18 19
 
-emission 3 3 3
+emission 4 4 4
 #light!
 vertex 368 548 180
 vertex 368 548 360

@@ -153,14 +153,11 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 			russian = 1.0/cutoff;
 		}
 	}
-	weight *= 0.95;
-	
 	
 	if( average(hit.primative->emission) > EPSILON ){
 		return hit.primative->emission;
 	}
-
-	vec3 normal = hit.primative->getNormal(hit.point);
+	
 	
 	/*********************************************
 	Importance sample global illumination
@@ -169,16 +166,21 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 	double specWeight = average(hit.primative->specular);
 	double threshold = diffWeight / (diffWeight + specWeight);
 	double u1 = ((double)rand()/(double)RAND_MAX);
-
-	vec3 color;
+	
 	/* Importance sample on macro level to choose diffuse or specular */
+	vec3 normal = hit.primative->getNormal(hit.point);
+	vec3 color;
 	if (u1 < threshold) {
 		vec3 newDirection = cos_weighted_hem(normal);
 		Ray newRay = Ray(hit.point+EPSILON*normal, newDirection);
 		double prob = 1.0/threshold;
-		color = prob * hit.primative->diffuse * findColor(scene, newRay, weight*diffWeight);
+		color += prob * hit.primative->diffuse * findColor(scene, newRay, weight*diffWeight);
 	} else {
 		vec3 reflect = glm::reflect(ray.direction, normal);
+		reflect = glm::normalize(reflect);
+		//Ray newRay(hit.point+EPSILON*normal, reflect);
+		//color += findColor(scene, newRay, specWeight*weight);
+		
 		vec3 newDirection = specular_weighted_hem(reflect, normal, hit.primative->shininess);
 		//vec3 newDirection = uniform_sample_hem(normal);
 		Ray newRay(hit.point+EPSILON*normal, newDirection);
@@ -193,7 +195,8 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 		double multiplier = (n + 2.0) / (n + 1.0);
 		multiplier *= 1.0/(1.0-threshold);
 		multiplier *= dot;
-		color =  multiplier * hit.primative->specular * findColor(scene, newRay, specWeight*weight);
+		color +=  multiplier * hit.primative->specular * findColor(scene, newRay, specWeight*weight);
+		
 	}
 	
 	return russian*color;
