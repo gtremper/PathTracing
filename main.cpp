@@ -58,6 +58,19 @@ mat3 center_axis(const vec3& norm){
 	return mat3(rotation);
 }
 
+/** try again to rotate ray */
+vec3 rotate_axis(const vec3& sample, const vec3& reflected_dir) {
+  double u1 = ((double)rand()/(double)RAND_MAX);
+  double u2 = ((double)rand()/(double)RAND_MAX);
+  double u3 = ((double)rand()/(double)RAND_MAX);
+  vec3 randompoint = vec3(u1, u2, u3);
+  vec3 u = glm::normalize(glm::cross(randompoint , reflected_dir));
+  vec3 v = glm::normalize(glm::cross(reflected_dir , u));
+  mat3 rot = mat3(u, v, reflected_dir);
+  rot = glm::transpose(rot);
+  return rot * sample;
+}
+
 /* Sample a hemisphere for diffuse ray */
 vec3 cos_weighted_hem(vec3& norm){
 	double u1 = ((double)rand()/(double)RAND_MAX);
@@ -96,9 +109,10 @@ vec3 cos_weighted_hem(vec3& norm){
 }
 
 /* Sample a hemispehre for specular ray */
-vec3 specular_weighted_hem(vec3& reflection, double n){
+vec3 specular_weighted_hem(vec3& reflection, const vec3& normal, double n){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
+	double u3 = ((double)rand()/(double)RAND_MAX);
 
 	double alpha = acos( pow( u1, 1.0 / (n + 1.0) ) );
 	double phi = 2.0 * M_PI * u2;
@@ -106,9 +120,18 @@ vec3 specular_weighted_hem(vec3& reflection, double n){
 	if (alpha < EPSILON) {
 		return reflection;
 	}
-	vec3 direction = vec3(cos(phi)*sin(alpha), sin(phi)*sin(alpha), cos(alpha));
 
+    //	original
+//	vec3 direction = vec3(cos(phi)*sin(alpha), cos(alpha), sin(phi)*sin(alpha));
+//	switched?
+//	vec3 direction = vec3(cos(phi)*sin(alpha), sin(phi)*sin(alpha), cos(alpha));
+ //   return direction;
+ //   from old 283 pro
+
+    vec3 direction = vec3(sin(alpha)*cos(phi), sin(alpha)*sin(phi), u3);
 	/* return direction rotated so its with respecto to reflection */
+    direction = rotate_axis(direction, reflection);
+    return direction;
 	return center_axis(direction) * direction;
 }
 
@@ -158,7 +181,7 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 		color = prob * hit.primative->diffuse * findColor(scene, newRay, weight*diffWeight);
 	} else {
 		vec3 reflect = glm::reflect(ray.direction, normal);
-		vec3 newDirection = specular_weighted_hem(reflect, hit.primative->shininess);
+		vec3 newDirection = specular_weighted_hem(reflect, normal, hit.primative->shininess);
 		Ray newRay(hit.point+EPSILON*normal, newDirection);
 		
 		double dot = glm::dot(normal, newDirection);
