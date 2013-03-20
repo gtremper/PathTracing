@@ -108,12 +108,6 @@ vec3 specular_weighted_hem(vec3& reflection, const vec3& normal, double n){
 
     double alpha = acos(pow(u1, 1.0/(1+n+1.0)));
     double phi = 2 * M_PI * u2;
-    vec3 sample = vec3(sin(alpha)*cos(phi), sin(alpha)*sin(phi), cos(alpha));
-    double angle_between = acos(reflection[2]);
-    vec3 rotation_axis = vec3( -reflection[1], reflection[0], 0.0);
-    rotation_axis = glm::normalize(rotation_axis);
-
-    return rotate_around_axis(rotation_axis, angle_between, sample) * sample;
 
 	if (alpha < EPSILON) {
 		return reflection;
@@ -121,7 +115,7 @@ vec3 specular_weighted_hem(vec3& reflection, const vec3& normal, double n){
 
     vec3 direction = vec3(sin(alpha)*cos(phi), sin(alpha)*sin(phi), u2);
 	/* return direction rotated so its with respecto to reflection */
-    direction = rotate_axis(direction, reflection);
+    direction = rotate_axis(direction, reflection)*direction;
     return direction;
 }
 
@@ -193,22 +187,12 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 		if (dot < 0.0) {
 			return vec3(0,0,0);
 		}
-		/*
-		vec3 half = glm::normalize(hit.sourceDirection + newDirection);
-		double phong =	pow( max(0.0,glm::dot(half,normal)) , hit.primative->shininess);
-
-		/* Get probability for importance sampling 
-		double cosalpha = max(0.0,glm::dot(newDirection,reflect));
-		cosalpha = pow(cosalpha, hit.primative->shininess);
-		double prob = cosalpha * (hit.primative->shininess + 1.0) / (2.0 * M_PI);
-		*/
 		
 		double n = hit.primative->shininess;
 
 		double multiplier = (n + 2.0) / (n + 1.0);
 		multiplier *= 1.0/(1.0-threshold);
 		multiplier *= dot;
-        multiplier = (hit.primative->shininess + 1.0) / (hit.primative->shininess + 2.0);
 		color =  multiplier * hit.primative->specular * findColor(scene, newRay, specWeight*weight);
 	}
 	
