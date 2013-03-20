@@ -98,8 +98,27 @@ vec3 specular_weighted_hem(vec3& reflection, const vec3& normal, double n){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
 
-	double alpha = acos( pow( u1, 1.0 / (n + 1.0) ) );
-	double phi = 2.0 * M_PI * u2;
+//    vec3 y = vec3(normal);
+//    vec3 h = vec3(normal);
+//	double alpha = acos( pow( u1, 1.0 / (n + 1.0) ) );
+//    double phi = 2.0 * M_PI * u2;
+//    double xs = sin(alpha) * cos(phi);
+//    double ys = sin(alpha) * sin(phi);
+//    double zs = u2;
+//    if ((fabs(h[0]) <= fabs(h[1])) && (fabs(h[0]) <= fabs(h[2])))
+//      h[0] = 1.0;
+//    else if ((fabs(h[1]) <= fabs(h[0])) && (fabs(h[1]) <= fabs(h[2])))
+//      h[1] = 1.0;
+//    else
+//      h[2] = 1.0;
+//    vec3 x = glm::cross(h,y);
+//    vec3 z = glm::cross(x,y);
+
+    double alpha = acos(pow(u1, 1/(1+n+1.0)));
+    double phi = 2 * M_PI * u2;
+    vec3 sample = vec3(sin(alpha)*cos(phi), sin(alpha)*sin(phi), u1);
+
+    return rotate_axis(sample, reflection);
 
 	if (alpha < EPSILON) {
 		return reflection;
