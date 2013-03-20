@@ -405,12 +405,14 @@ int main(int argc, char* argv[]){
 	}
 	srand(time(0));
     parse_command_line(argc, argv);
+    if (!numFrames) {
+      glutInit(&argc, argv);
+      glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+      glutCreateWindow("Path Tracer");
+    }
 	init(argv[argc-1]);
     if (numFrames)
       display();
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-	glutCreateWindow("Path Tracer");
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutReshapeFunc(reshape);
