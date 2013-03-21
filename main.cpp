@@ -94,28 +94,47 @@ vec3 cos_weighted_hem(vec3& norm){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
 
-    double theta = acos(sqrt(u1));
-    double phi = 2.0*M_PI*u2;
-    vec3 sample = vec3(sin(theta)*cos(phi), sin(theta)*sin(phi), u1);
+    vec3 y = vec3(norm);
+    vec3 h = vec3(norm);
+    double theta = acos(sqrt(1.0 - u1));
+    double phi = 2.0 * M_PI * u2;
+    double xs = sin(theta) * cos(phi);
+    double ys = cos(theta);
+    double zs = sin(theta) * sin(phi);
+    if ((abs(h[0]) <= abs(h[1])) && (abs(h[0]) <= abs(h[2])))
+        h[0] = 1.0;
+    else if ((abs(h[1]) <= abs(h[0])) && (abs(h[1]) <= abs(h[2])))
+        h[1] = 1.0;
+    else
+        h[2] = 1.0;
+    vec3 x = glm::cross(h,y);
+    vec3 z = glm::cross(x,y);
 
-    return rotate_axis(sample, norm)*sample;
+      vec3 direction = xs * x + ys * y + zs * z;
+    return direction;
 }
 
 /* Sample a hemispehre for specular ray */
-vec3 specular_weighted_hem(vec3& reflection, const vec3& normal, double n){
+vec3 specular_weighted_hem(vec3& reflection, const vec3& norm, double n){
 	double u1 = ((double)rand()/(double)RAND_MAX);
 	double u2 = ((double)rand()/(double)RAND_MAX);
-
+    vec3 y = vec3(norm);
+    vec3 h = vec3(norm);
     double alpha = acos(pow(u1, 1.0/(n+1.0)));
-    double phi = 2 * M_PI * u2;
+    double phi = 2.0 * M_PI * u2;
+    double xs = sin(alpha) * cos(phi);
+    double ys = cos(alpha);
+    double zs = sin(alpha) * sin(phi);
+    if ((abs(h[0]) <= abs(h[1])) && (abs(h[0]) <= abs(h[2])))
+        h[0] = 1.0;
+    else if ((abs(h[1]) <= abs(h[0])) && (abs(h[1]) <= abs(h[2])))
+        h[1] = 1.0;
+    else
+        h[2] = 1.0;
+    vec3 x = glm::cross(h,y);
+    vec3 z = glm::cross(x,y);
 
-	if (alpha < EPSILON) {
-		return reflection;
-	}
-
-    vec3 direction = vec3(sin(alpha)*cos(phi), sin(alpha)*sin(phi), u2);
-	/* return direction rotated so its with respecto to reflection */
-    direction = rotate_axis(direction, reflection)*direction;
+      vec3 direction = xs * x + ys * y + zs * z;
     return direction;
 }
 
@@ -140,7 +159,7 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 	if(!hit.primative) {
 		return vec3(0,0,0); //background color
 	}
-	
+
 	/* Russian Roulette */
 	double russian = 1.0;
 	const double cutoff = 0.1;
@@ -153,12 +172,12 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 			russian = 1.0/cutoff;
 		}
 	}
-	
+
 	if( average(hit.primative->emission) > EPSILON ){
 		return hit.primative->emission;
 	}
-	
-	
+
+
 	/*********************************************
 	Importance sample global illumination
 	*********************************************/
@@ -166,7 +185,7 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 	double specWeight = average(hit.primative->specular);
 	double threshold = diffWeight / (diffWeight + specWeight);
 	double u1 = ((double)rand()/(double)RAND_MAX);
-	
+
 	/* Importance sample on macro level to choose diffuse or specular */
 	vec3 normal = hit.primative->getNormal(hit.point);
 	vec3 color;
@@ -180,25 +199,25 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 		vec3 reflect = glm::reflect(ray.direction, normal);
 		//newRay = Ray(hit.point+EPSILON*normal, reflect);
 		//color += findColor(scene, newRay, specWeight*weight);
-		
+
 		vec3 newDirection = specular_weighted_hem(reflect, normal, hit.primative->shininess);
 		//vec3 newDirection = uniform_sample_hem(normal);
 		newRay = Ray(hit.point+EPSILON*normal, newDirection);
-		
+
 		double dot = glm::dot(normal, newDirection);
 		if (dot < 0.0) {
 			return vec3(0,0,0);
 		}
-		
+
 		double n = hit.primative->shininess;
 
 		double multiplier = (n + 2.0) / (n + 1.0);
 		multiplier *= 1.0/(1.0-threshold);
 		multiplier *= dot;
 		color +=  multiplier * hit.primative->specular * findColor(scene, newRay, specWeight*weight);
-		
+
 	}
-	
+
 	return russian*color;
 }
 
@@ -345,7 +364,7 @@ void init(char* filename) {
 	direct_pixels = new vec3[width*height];
 	memset(pixels, 0, sizeof(vec3)*width*height);
 	memset(direct_pixels, 0, sizeof(vec3)*width*height);
-	
+
 	FreeImage_Initialise();
 	bitmap = FreeImage_Allocate(width, height, BPP);
 
