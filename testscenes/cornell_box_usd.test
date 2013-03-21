@@ -85,7 +85,7 @@ emission 0 0 0
 diffuse .5 .5 .5
 specular .2 .2 .2
 pushTransform
-translate 278 50 200
+translate 278 50 350
 scale 50 50 50
 sphere 0 0 0 1
 popTransform
