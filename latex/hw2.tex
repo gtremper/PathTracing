@@ -36,15 +36,32 @@ The project was built upon a basic ray tracer programmed for CS184, which suppor
 
 \subsection{Importance Sampling}
 
+We implemented both macro and micro level importance sampling. For the macro level, we chose to shoot either a diffuse or specular ray based on the weight of the specular and diffuse weights for the primitive (We defined the weight as the averaged of the RGB values). At the micro level, we chose a ray direction using separate distributions for specular and diffuse.\\
+
+Since diffuse rays distribute evenly in all directions, we important sampled according to the $\cos$ term in the rendering equation. This gave us the following distribution where $\theta$ is the angle between the surface normal and the selected ray direction.
+
+\begin{equation}
+	pdf(\theta) = \frac{\cos(\theta)}{\pi}
+\end{equation}
+
+For specular rays, we sampled in a hemisphere around the ideal reflection direction according to the specular BRDF. This gave us the following distribution, where $\alpha$ is the angle between the ideal reflection direction and the chosen ray and $n$ is the shininess.
+
+\begin{equation}
+	pdf(\alpha) = \frac{n+1}{2\pi}\cos^{n}(\alpha)
+\end{equation}
+
+
 \subsection{Direct Lighting}
+Direct lightly allows some of the more important information to always be sampled, reducing the variance significantly. Run an initial direct lighting pass to capture all of single bounce lighting (Light paths in the form L(S|D)E). We shot 12 shadow rays per sample, and used antialiasing to capture correct soft shadows. This only needs to be computed once, and the result is added to the final ``path traced'' image. We also tried shooting a single shadow ray per global illumination step to reduce variance, but found that this nearly doubled the sampling time without much reduction in variance. 
+
 
 \section{Extra Features}
 
 \subsection{Russian Roulette}
-Russian roulette allows for a ray termination scheme without introducing bias in the final picture that techniques such as a depth limit introduce.
+Russian roulette allows for a ray termination scheme without introducing bias in the final picture that techniques such as a depth limit will introduce. We stored a weight associated with each ray that represented how much that color will contribute to the final image. When this weight falls bellow $0.01$, we kill $90\%$ of the rays and appropriately weight the surviving rays. We found this ratio didn't negatively effect performance or the variance.
 
 \subsection{Soft Shadows}
-We implemented soft shadows by using stratified sampling on the area lights. This was non-trivial, since we used triangle shaped emissive surfaces. In order to correctly stratify the triangle, we divided the triangle into six sections of equal area. This was done by finding the centroid of the triangle, and creating 6 new triangles as shown in the figure below.
+We implemented soft shadows by using stratified sampling on the area lights. This was non-trivial, since we used triangle shaped emissive surfaces. In order to correctly stratify the triangle, we divided the triangle into six sections of equal area. This was done by finding the centroid of the triangle, and creating 6 new triangles as shown in the figure below. This process could be applied recursively for further stratification, but we found this unnecessary for the images we generated.
 
 \begin{figure}
 	\begin{center}
