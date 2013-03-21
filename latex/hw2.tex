@@ -52,7 +52,23 @@ For specular rays, we sampled in a hemisphere around the ideal reflection direct
 	pdf(\alpha) = \frac{n+1}{2\pi}\cos^{n}(\alpha)
 \end{equation}
 
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=.4\linewidth]{figs/impsample1cornell}
+    \includegraphics[width=.4\linewidth]{figs/impsample10cornell}
+    \includegraphics[width=.4\linewidth]{figs/impsample100cornell}
+  \end{center}
+  \caption{Importance Sampling with 1, 10 and 100 samples}
+\end{figure}
 
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=.4\linewidth]{figs/noimpsample1cornell}
+    \includegraphics[width=.4\linewidth]{figs/noimpsample10cornell}
+%    \includegraphics[width=.4\linewidth]{figs/noimpsample100cornell}
+  \end{center}
+  \caption{No Importance Sampling with 1, 10 and 100 samples}
+\end{figure}
 \subsection{Direct Lighting}
 Direct lightly allows some of the more important information to always be sampled, reducing the variance significantly. Run an initial direct lighting pass to capture all of single bounce lighting (Light paths in the form L(S|D)E). We shot 12 shadow rays per sample, and used antialiasing to capture correct soft shadows. This only needs to be computed once, and the result is added to the final ``path traced'' image. We also tried shooting a single shadow ray per global illumination step to reduce variance, but found that this nearly doubled the sampling time without much reduction in variance. 
 
