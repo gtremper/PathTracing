@@ -137,9 +137,9 @@ vec3 Triangle::shade(Intersection& hit, TreeNode* tree, bool single_ray) {
 		dist *= dist; // square distance
 		double cos_weight = glm::dot(s_norm, dir);
 		cos_weight *= glm::dot(getNormal(light_hit.point), -dir);
-		cos_weight /= dist;
 		/* Multiply by dA */
 		cos_weight *= 0.5 * glm::dot(p1-p0, p2-p0);
+		cos_weight /= dist;
 		return cos_weight * shade;
 	}	
 	

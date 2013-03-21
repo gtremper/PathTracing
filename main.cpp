@@ -166,7 +166,7 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 
 	/* Russian Roulette */
 	double russian = 1.0;
-	const double cutoff = 0.1;
+	const double cutoff = 0.25;
 	if (weight < 0.001) {
 		return vec3(0,0,0);
 		double u1 = ((double)rand()/(double)RAND_MAX);
@@ -181,7 +181,7 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 	/*********************************************
 	Add direct lighting contribution
 	*********************************************/
-	if (weight < 1.0 && russian == 1.0){
+	if (weight < 1.0 && weight > 0.01){
 		int numLights = scene->lights.size();
 		color += scene->lights[rand() % numLights]->shade(hit, scene->KDTree, true);
 	}
@@ -257,6 +257,11 @@ void raytrace(double rayscast) {
 				}
 			}
 			color *= (subdivide * subdivide);
+			
+			color[0] = min(color[0],1.0);
+			color[1] = min(color[1],1.0);
+			color[2] = min(color[2],1.0);
+			
 			pixels[i + scene->width*j] *= old_weight;
 			pixels[i + scene->width*j] += new_weight*color;
 			color = pixels[i + scene->width*j] + direct_pixels[i + scene->width*j];
@@ -312,6 +317,11 @@ void direct_raytrace() {
 				}
 			}
 			color *= (subdivide * subdivide);
+			color[0] = min(color[0],1.0);
+			color[1] = min(color[1],1.0);
+			color[2] = min(color[2],1.0);
+			
+			
 			direct_pixels[i + scene->width*j] = color;
 			rgb.rgbRed = min(color[0],1.0)*255.0;
 			rgb.rgbGreen = min(color[1],1.0)*255.0;
@@ -319,7 +329,7 @@ void direct_raytrace() {
 			FreeImage_SetPixelColor(bitmap,i,j,&rgb);
 		}
 	}
-	clog << "	done\n";
+	clog << "\n	done\n";
 }
 
 /* Everything below here is openGL boilerplate */
