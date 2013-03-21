@@ -34,6 +34,8 @@ The project was built upon a basic ray tracer programmed for CS184, which suppor
 
 \subsection{Naïve Path Tracing}
 
+We first implemented a simple path tracer that picked a random direction on the hemisphere at each bounce and a finite number of bounces. We terminated when hitting a emissive object, since we assume lights have no other reflective properties. This gave results with very high variance, and potential bias with the arbitrary depth limit. To speed up our renders, we used one of the instructional machines with the following specs: MacPro model 4,1, Quad-Core 2.26 GHz Intel Xeon (2 processors, 8 cores), 12-GB RAM
+
 \subsection{Importance Sampling}
 
 We implemented both macro and micro level importance sampling. For the macro level, we chose to shoot either a diffuse or specular ray based on the weight of the specular and diffuse weights for the primitive (We defined the weight as the averaged of the RGB values). At the micro level, we chose a ray direction using separate distributions for specular and diffuse.\\
