@@ -32,7 +32,7 @@ The project was built upon a basic ray tracer programmed for CS184, which suppor
 
 \section{Basic Implementation}
 
-\subsection{Naïve Path Tracing}
+\subsection{Naive Path Tracing}
 
 We first implemented a simple path tracer that picked a random direction on the hemisphere at each bounce and a finite number of bounces. We terminated when hitting a emissive object, since we assume lights have no other reflective properties. This gave results with very high variance, and potential bias with the arbitrary depth limit. To speed up our renders, we used one of the instructional machines with the following specs: MacPro model 4,1, Quad-Core 2.26 GHz Intel Xeon (2 processors, 8 cores), 12-GB RAM
 
@@ -85,6 +85,14 @@ Direct lightly allows some of the more important information to always be sample
   \includegraphics[width=.4\linewidth]{figs/indirect_only_10sample}
   \end{center}
   \caption{Indirect lighting only, with 1 and 10 samples}
+\end{figure}
+
+\begin{figure}
+ \begin{center}
+	\includegraphics[width=.45\linewidth]{figs/direct_only_cornell}
+	\includegraphics[width=.45\linewidth]{figs/everything_1sample}
+	\caption{Observe direct lighting only versus 16 samples of indirect lighting added to the direct lighting base. Note the color bleeding and lighting in previously darkened areas.} 
+ \end{center}
 \end{figure}
 
 \section{Extra Features}
