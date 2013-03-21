@@ -70,7 +70,7 @@ For specular rays, we sampled in a hemisphere around the ideal reflection direct
   \caption{No Importance Sampling with 16, 160 and 1600 samples. Direct lighting only on first bounce.}
 \end{figure}
 \subsection{Direct Lighting}
-Direct lightly allows some of the more important information to always be sampled, reducing the variance significantly. Run an initial direct lighting pass to capture all of single bounce lighting (Light paths in the form $L(S|D)E)$. We shot 12 shadow rays per sample, and used antialiasing to capture correct soft shadows. This only needs to be computed once, and the result is added to the final ``path traced'' image. We also tried shooting a single shadow ray per global illumination step to reduce variance, but found that this nearly doubled the sampling time without much reduction in variance. 
+Direct lightly allows some of the more important information to always be sampled, reducing the variance significantly. Run an initial direct lighting pass to capture all of single bounce lighting (Light paths in the form $L(S|D)E)$. We shot 12 shadow rays per sample, and used antialiasing to capture correct soft shadows. This only needs to be computed once, and the result is added to the final ``path traced'' image. We also shoot a single shadow ray per global illumination step to reduce variance. This also created ``firefly'' artifacts with small number samples.
 
 \begin{figure}
   \begin{center}
@@ -102,7 +102,7 @@ We implemented soft shadows by using stratified sampling on the area lights. Thi
 	\end{center}
 \end{figure}
 
-For the global illumination, we achieved area lighting by simply having the lights be real objects in the scene. We assumed lights had no other reflective properties, so rays could always be terminated when one was hit. We also tried sampling the area light with a single shadow ray for each path tracer bounce, but had a large increase in compute time without much reduction in variance, so we omitted it.
+For the global illumination, we achieved area lighting by simply having the lights be real objects in the scene. We assumed lights had no other reflective properties, so rays could always be terminated when one was hit. We also sample the area light with a single shadow ray for each path tracer bounce.
 
 \subsection{Anti-aliasing}
 
