@@ -17,10 +17,10 @@ compiled binary, \verb`raytracer` accepts 1 mandatory argument which is the path
 1 optional argument \verb`-f X`, where \verb`X` is the number of samples you wish to send at the scene.
 For example
 
-\begin{center}
-	\verb`prompt> ./raytracer testscenes/cornell_box.test`
-	\verb`prompt> ./raytracer -f 1000 testscenes/cornell_box.test`
-\end{center}
+\begin{verbatim}
+prompt> ./raytracer testscenes/cornell_box.test
+prompt> ./raytracer -f 1000 testscenes/cornell_box.test
+\end{verbatim}
 
 If \verb`raytracer` is run without the optional \verb`-f` option, it enters an interactive mode. Pressing \verb`l`
 will send a round of samples at the scene and render the result. Pressing \verb`f` will send 10000 samples
