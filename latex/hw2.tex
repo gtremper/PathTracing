@@ -72,6 +72,20 @@ For specular rays, we sampled in a hemisphere around the ideal reflection direct
 \subsection{Direct Lighting}
 Direct lightly allows some of the more important information to always be sampled, reducing the variance significantly. Run an initial direct lighting pass to capture all of single bounce lighting (Light paths in the form L(S|D)E). We shot 12 shadow rays per sample, and used antialiasing to capture correct soft shadows. This only needs to be computed once, and the result is added to the final ``path traced'' image. We also tried shooting a single shadow ray per global illumination step to reduce variance, but found that this nearly doubled the sampling time without much reduction in variance. 
 
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=.5\linewidth]{figs/direct_only_cornell}
+  \end{center}
+  \caption{Direct lighting only}
+\end{figure}
+
+\begin{figure}
+  \begin{center}
+  \includegraphics[width=.4\linewidth]{figs/indirect_only_1sample}
+  \includegraphics[width=.4\linewidth]{figs/indirect_only_10sample}
+  \end{center}
+  \caption{Indirect lighting only, with 1 and 10 samples}
+\end{figure}
 
 \section{Extra Features}
 
