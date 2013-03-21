@@ -109,13 +109,44 @@ inline vec3 genSample(const vec3& p0, const vec3& p1, const vec3& p2) {
 /*
 returns shade
 */
-vec3 Triangle::shade(Intersection& hit, TreeNode* tree) {
+vec3 Triangle::shade(Intersection& hit, TreeNode* tree, bool single_ray) {
 	vec3 s_norm = hit.primative->getNormal(hit.point);
 	vec3 s_diffuse = hit.primative->diffuse;
 	vec3 s_specular = hit.primative->specular;
 	double s_shininess = hit.primative->shininess;
 	
+	if (single_ray){
+		vec3 light_samp = genSample(p0, p1, p2);
+		
+		vec3 dir = glm::normalize(light_samp - hit.point);
+		Ray ray = Ray(hit.point + EPSILON * s_norm, dir);
+		Intersection light_hit = tree->intersect(ray);
+		if (light_hit.primative != this) {
+			return vec3(0,0,0); // is a shadow
+		}
+		
+		/* Calculate shading */
+		vec3 shade = max(0.0,glm::dot(s_norm, dir)) * s_diffuse;
+		vec3 half = glm::normalize(hit.sourceDirection+dir);
+		double phong = pow( max(0.0,glm::dot(half,s_norm)) , s_shininess);
+		shade += phong * s_specular;
+		shade *= this->emission;
+
+		/* weigh by dA */
+		double dist = glm::distance(hit.point, light_hit.point);
+		dist *= dist; // square distance
+		double cos_weight = glm::dot(s_norm, dir);
+		cos_weight *= glm::dot(getNormal(light_hit.point), -dir);
+		cos_weight /= dist;
+		/* Multiply by dA */
+		cos_weight *= 0.5 * glm::dot(p1-p0, p2-p0);
+		return cos_weight * shade;
+	}	
+	
+	
+	
 	/* Setup array to rotate through parts of triangle */
+	/* Slightly hardcoded for improved performace */
 	vec3 centroid = p0 + p1 + p2;
 	centroid /= 3.0;
 	vec3 corners[] = {p0, (p0+p1)/2.0, p1, (p1+p2)/2.0, p2, (p2+p0)/2.0, p0};
@@ -130,8 +161,7 @@ vec3 Triangle::shade(Intersection& hit, TreeNode* tree) {
 		Ray ray = Ray(hit.point + EPSILON * s_norm, dir);
 		Intersection light_hit = tree->intersect(ray);
 		if (light_hit.primative != this) {
-			// is a shadow
-			continue;
+			continue; // is a shadow
 		}
 		
 		/* Calculate shading */
@@ -251,7 +281,7 @@ double Sphere::getSubtendedAngle(const vec3& origin) {
 	exit(1);
 }
 
-vec3 Sphere::shade(Intersection& hit, TreeNode* tree) {
+vec3 Sphere::shade(Intersection& hit, TreeNode* tree, bool derp) {
 	cout << "THIS IS NOT IMPLEMENTED" << endl;
 	exit(1);
 }

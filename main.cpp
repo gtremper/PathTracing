@@ -159,6 +159,10 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 	if(!hit.primative) {
 		return vec3(0,0,0); //background color
 	}
+	
+	if( average(hit.primative->emission) > EPSILON ){
+		return hit.primative->emission;
+	}
 
 	/* Russian Roulette */
 	double russian = 1.0;
@@ -172,10 +176,16 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 			russian = 1.0/cutoff;
 		}
 	}
-
-	if( average(hit.primative->emission) > EPSILON ){
-		return hit.primative->emission;
+	
+	vec3 color = vec3(0,0,0);
+	/*********************************************
+	Add direct lighting contribution
+	*********************************************/
+	if (weight < 1.0 && russian == 1.0){
+		int numLights = scene->lights.size();
+		color += scene->lights[rand() % numLights]->shade(hit, scene->KDTree, true);
 	}
+	weight *= 0.95; // make sure it doesnt go forever
 
 
 	/*********************************************
@@ -188,7 +198,6 @@ vec3 findColor(Scene* scene, Ray& ray, double weight) {
 
 	/* Importance sample on macro level to choose diffuse or specular */
 	vec3 normal = hit.primative->getNormal(hit.point);
-	vec3 color;
     Ray newRay;
 	if (u1 < threshold) {
 		vec3 newDirection = cos_weighted_hem(normal);
@@ -274,7 +283,7 @@ vec3 direct_lighting(Scene* scene, Ray& ray){
 
 	vec3 color = vec3(0,0,0);
 	for (unsigned int i = 0; i < scene->lights.size(); i++) {
-		color += scene->lights[i]->shade(hit, scene->KDTree);
+		color += scene->lights[i]->shade(hit, scene->KDTree, false);
 	}
 	return color;
 }
